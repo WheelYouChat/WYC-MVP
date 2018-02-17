@@ -24,8 +24,8 @@ public class DriverBotService {
 	@Autowired
 	private DriveMessageRepository driveMessageRepository;
 	
-	@BotMethod(title="Сообщить номер автомобиля")
-	public void setNumber(@BotMethodParam(title="Номер автомобиля") String newNumber, @BotUser String currentUserId) {
+	@BotMethod(title="Сообщить номер вашего автомобиля")
+	public void setNumber(@BotMethodParam(title="Номер вашего автомобиля") String newNumber, @BotUser String currentUserId) {
 		Person person = personRepository.findOne(Integer.parseInt(currentUserId));
 		person.setCarNumber(newNumber);
 		personRepository.save(person);
