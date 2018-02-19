@@ -12,6 +12,8 @@ import com.wyc.annotation.BotMethod;
 import com.wyc.annotation.BotMethodParam;
 import com.wyc.annotation.BotService;
 import com.wyc.annotation.BotUser;
+import com.wyc.chat.validator.CarNameValidator;
+import com.wyc.chat.validator.NicknameValidator;
 import com.wyc.chat.validator.PlateValidator;
 import com.wyc.db.model.DriveMessage;
 import com.wyc.db.model.DriveMessage.DriveMessageType;
@@ -29,11 +31,18 @@ public class DriverBotService {
 	@Autowired
 	private DriveMessageRepository driveMessageRepository;
 	
-	@BotMethod(title="Сообщить номер вашего автомобиля")
-	public void setNumber(@BotMethodParam(title="Номер вашего автомобиля", validators=PlateValidator.class) String newNumber, @BotUser String currentUserId) {
+	@BotMethod(title="Заполнить профиль (номер, ник, авто)")
+	public String setNumber(
+			@BotMethodParam(title="Номер вашего автомобиля в формате А123АА99", validators=PlateValidator.class) String newNumber, 
+			@BotMethodParam(title="Ваш ник (например Лихач)", validators=NicknameValidator.class) String newNickname, 
+			@BotMethodParam(title="Описание вашего автомобиля (например Красная Феррари)", validators=CarNameValidator.class) String newCarName, 
+			@BotUser String currentUserId) {
 		Person person = personRepository.findOne(Integer.parseInt(currentUserId));
 		person.setCarNumber(newNumber);
+		person.setNickname(newNickname);
+		person.setCarName(newCarName);
 		personRepository.save(person);
+		return "Спасибо за регистрацию.\nТеперь все будут видеть вас как '" + person.getUserDesc() + "'"; 
 	}
 	
 	/*

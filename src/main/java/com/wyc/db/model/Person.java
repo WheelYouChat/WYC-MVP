@@ -1,5 +1,7 @@
 package com.wyc.db.model;
 
+import java.util.Date;
+
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -38,6 +40,26 @@ public class Person {
 
 	private String languageCode;
 	
+	private Date registrationDate;
+	
 	@Enumerated(EnumType.STRING)
 	private Role role;
+	
+	private String nickname;
+	
+	private String carName;
+
+	
+	public String getUserDesc() {
+		if(getNickname() == null && getCarName() == null) {
+			return "Неизвестный";
+		}
+		if(getNickname() != null && getCarName() == null) {
+			return getNickname();
+		}
+		if(getNickname() == null && getCarName() != null) {
+			return "Неизвестный - " + getCarName();
+		}
+		return getNickname() + " - " + getCarName();
+	}
 }

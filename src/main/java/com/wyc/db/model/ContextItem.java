@@ -1,5 +1,7 @@
 package com.wyc.db.model;
 
+import java.util.Date;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -22,6 +24,8 @@ public class ContextItem {
 	private String value;
 	
 	private int idx;
+	
+	private Date creationDate;
 	
 	@ManyToOne
 	private PersonContext personContext;

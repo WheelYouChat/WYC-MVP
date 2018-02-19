@@ -14,16 +14,21 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.util.Pair;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.api.objects.CallbackQuery;
 import org.telegram.telegrambots.api.objects.Location;
 import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.api.objects.User;
 import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboard;
+import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
+import org.telegram.telegrambots.exceptions.TelegramApiValidationException;
 
 import com.wyc.annotation.BotMethod;
 import com.wyc.annotation.BotMethodParam;
@@ -72,29 +77,55 @@ public class WYCBot extends TelegramLongPollingBot {
 				// Contact contact = msg.getContact();
 				User contact = msg.getFrom();
 				
-				Person p = Person.builder()
-						.carNumber("")
-						.userName(contact.getUserName())
-						.firstName(contact.getFirstName())
-						.lastName(contact.getLastName())
-						.id(contact.getId())
-						.languageCode(contact.getLanguageCode())
-						.build();
-				log.info("Register person " + p);
+				Person existingPerson = personRepository.findOne(contact.getId());
 
-				personRepository.save(p);
-				
 				SendMessage sendMessage = new SendMessage();
+				
+				if(existingPerson == null) {
+				
+					Person p = Person.builder()
+							.carNumber("")
+							.userName(contact.getUserName())
+							.firstName(contact.getFirstName())
+							.lastName(contact.getLastName())
+							.id(contact.getId())
+							.languageCode(contact.getLanguageCode())
+							.registrationDate(new Date())
+							.build();
+					log.info("Register person " + p);
+
+					personRepository.save(p);
+					sendMessage.setText("Вы зарегистрированы.");
+				} else {
+					sendMessage.setText("Вы уже зарегистрированы.");
+				}
+				
 				sendMessage.setChatId(msg.getChatId());
 				
 				sendMessage.setReplyToMessageId(msg.getMessageId());
-				sendMessage.setText("Вы зарегистрированы.");
 				
 				InlineKeyboardMarkup inlineKeyboardMarkup = createMenu();
 				sendMessage.setReplyMarkup(inlineKeyboardMarkup);
-				clearContext(p.getId());
+				clearContext(contact.getId());
 				
 				try {
+					sendMessage(sendMessage);
+				} catch(TelegramApiException e) {
+					log.error("Error sending message " + sendMessage, e);
+				}
+				try {
+					sendMessage = new SendMessage();
+					sendMessage.setChatId(msg.getChatId());
+					ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+					List<KeyboardRow> keyboard = new ArrayList<>();
+					KeyboardRow row = new KeyboardRow();
+					KeyboardButton button = new KeyboardButton("/menu");
+					button.setRequestContact(true);
+					row.add(button);
+					keyboard.add(row );
+					keyboardMarkup.setKeyboard(keyboard );
+					sendMessage.setReplyMarkup(keyboardMarkup);
+					sendMessage.setText("Menu");
 					sendMessage(sendMessage);
 				} catch(TelegramApiException e) {
 					log.error("Error sending message " + sendMessage, e);
@@ -112,7 +143,7 @@ public class WYCBot extends TelegramLongPollingBot {
 			String data = callback.getData();
 			if(isEnum(data)) {
 				String enumValue = data.substring(1);
-				processAnswer(enumValue, null, from.getId().toString(), null, from);
+				processAnswer(enumValue, null, from.getId().toString(), callback.getMessage().getMessageId(), callback.getInlineMessageId(), from);
 			} else if(isMethod(data)) {
 				String methodId = data;
 				
@@ -133,6 +164,7 @@ public class WYCBot extends TelegramLongPollingBot {
 							.id(user.getId() + " - " + methodId)
 							.method(methodId)
 							.person(user)
+							.creationDate(new Date())
 							.build();
 					personContextRepository.save(personContext);
 					personContext = prepareContext(personContext, method);
@@ -199,10 +231,10 @@ public class WYCBot extends TelegramLongPollingBot {
 	}
 	
 	private void processAnswer(Message msg) {
-		processAnswer(msg.getText(), msg.getLocation(), msg.getChatId().toString(), msg.getMessageId(), msg.getFrom());
+		processAnswer(msg.getText(), msg.getLocation(), msg.getChatId().toString(), msg.getMessageId(), null, msg.getFrom());
 	}
 	
-	private void processAnswer(String value, Location location, String chatId, Integer replyToMessageId, User from) {
+	private void processAnswer(String value, Location location, String chatId, Integer replyToMessageId, String inlineMessageId, User from) {
 		// Handle answer for a question
 		Optional<PersonContext> pcOpt = getPersonContext(from);
 		pcOpt.ifPresent(pc -> {
@@ -235,13 +267,39 @@ public class WYCBot extends TelegramLongPollingBot {
 						if(location != null) {
 							v = location.getLongitude() + ":" + location.getLatitude();
 						}
-						ContextItem contextItem = new ContextItem();
-						contextItem.setId(pc.getId() + " - " + idx);
-						contextItem.setIdx(idx);
-						contextItem.setPersonContext(pc);
-						contextItem.setValue(v);
+						ContextItem contextItem = ContextItem.builder()
+								.id(pc.getId() + " - " + idx)
+								.idx(idx)
+								.personContext(pc)
+								.value(v)
+								.creationDate(new Date())
+								.build();
 						contextItemRepository.save(contextItem);
 						PersonContext pcNew = personContextRepository.findOne(pc.getId());
+						
+						Class<?> paramType = method.getParameterTypes()[idx];
+						if(paramType.isEnum() && replyToMessageId != null) {
+							Object[] enumValues = paramType.getEnumConstants();
+							String finalV = v;
+							Arrays.stream(enumValues).filter(ev -> ev.toString().equals(finalV)).findFirst().ifPresent(enumValue -> {
+								EditMessageReplyMarkup editMessageReplyMarkup = new EditMessageReplyMarkup();
+								editMessageReplyMarkup.setChatId(chatId);
+								// editMessageReplyMarkup.setInlineMessageId(inlineMessageId);
+								editMessageReplyMarkup.setMessageId(replyToMessageId);
+
+								InlineKeyboardMarkup replyMarkup = createInlineKeyboardForEnums(enumValue);
+								editMessageReplyMarkup.setReplyMarkup(replyMarkup );
+								// Change Enum
+								try {
+									editMessageReplyMarkup(editMessageReplyMarkup);
+								} catch (TelegramApiException e) {
+									log.error("Error editing replay markup.", e);
+								}
+								
+							});
+						}
+						
+						
 						if(contextIsReady(pcNew, method)) {
 							invoke(bm.getFirst(), pcNew, method, replyToMessageId);
 						} else {
@@ -411,6 +469,7 @@ public class WYCBot extends TelegramLongPollingBot {
 							.idx(i)
 							.value(personContext.getPerson().getId().toString())
 							.personContext(personContext)
+							.creationDate(new Date())
 							.build();
 					contextItemRepository.save(ci);
 				}
@@ -458,23 +517,7 @@ public class WYCBot extends TelegramLongPollingBot {
 					keyboard.add(row);
 					
 				} else if(paramType.isEnum()) {
-					List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-					Object[] enumValues=paramType.getEnumConstants();
-					for(Object enumValue : enumValues) {
-						List<InlineKeyboardButton> row = new ArrayList<>();
-						InlineKeyboardButton button = new InlineKeyboardButton();
-						button.setCallbackData("-" + enumValue.toString());
-						if(enumValue instanceof HasTitle) {
-							HasTitle hasTitle = (HasTitle) enumValue;
-							button.setText(hasTitle.getTitle());
-						} else {
-							button.setText(enumValue.toString());
-						}
-						row.add(button);
-						keyboard.add(row);
-					}
-					InlineKeyboardMarkup replyMarkup = new InlineKeyboardMarkup();
-					replyMarkup.setKeyboard(keyboard);
+					InlineKeyboardMarkup replyMarkup = createInlineKeyboardForEnums(paramType.getEnumConstants());
 					sendMessage.setReplyMarkup(replyMarkup );
 				}
 				return sendMessage;
@@ -482,6 +525,26 @@ public class WYCBot extends TelegramLongPollingBot {
 		}
 		return null;
 		
+	}
+	
+	protected InlineKeyboardMarkup createInlineKeyboardForEnums(Object... enumValues) {
+		List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+		for(Object enumValue : enumValues) {
+			List<InlineKeyboardButton> row = new ArrayList<>();
+			InlineKeyboardButton button = new InlineKeyboardButton();
+			button.setCallbackData("-" + enumValue.toString());
+			if(enumValue instanceof HasTitle) {
+				HasTitle hasTitle = (HasTitle) enumValue;
+				button.setText(hasTitle.getTitle());
+			} else {
+				button.setText(enumValue.toString());
+			}
+			row.add(button);
+			keyboard.add(row);
+		}
+		InlineKeyboardMarkup replyMarkup = new InlineKeyboardMarkup();
+		replyMarkup.setKeyboard(keyboard);
+		return replyMarkup;
 	}
 	
 	private int getNextQuestionIdx(PersonContext personContext, Method method) {
@@ -557,7 +620,7 @@ public class WYCBot extends TelegramLongPollingBot {
 	}
 
 	protected String createMessageText(DriveMessage message) {
-		return "Вам поступило сообщение от " + message.getFrom().getUserName() + "\n" + message.getMessage() + 
+		return "Вам поступило сообщение от " + message.getFrom().getUserDesc() + "\n" + message.getMessage() + 
 				(message.getLocationTitle() == null ? "" : "\nМесто: " + message.getLocationTitle());
 	}
 	
