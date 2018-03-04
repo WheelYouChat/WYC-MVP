@@ -3,8 +3,9 @@ package com.wyc.db.model;
 import java.util.Date;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,13 +17,20 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ContextItem {
+public class IncomingMessage {
 
 	@Id
-	private String id;
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private Long id;
+
+	private Date creationDate;
 	
-	private String value;
+	private Integer senderId;
 	
+	private String text;
+	
+	private String data;
+
 	private String contactFirstName;
 
 	private String contactLastName;
@@ -31,10 +39,7 @@ public class ContextItem {
 
 	private Integer contactUserId;
 	
-	private int idx;
+	private Float longitude;
 	
-	private Date creationDate;
-	
-	@ManyToOne
-	private PersonContext personContext;
+	private Float latitude;
 }

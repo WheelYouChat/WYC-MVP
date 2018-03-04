@@ -1,28 +1,40 @@
 package com.wyc.service;
 
 import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.api.objects.Contact;
 import org.telegram.telegrambots.api.objects.Location;
+import org.telegram.telegrambots.api.objects.Message;
 
 import com.wyc.annotation.BotMethod;
 import com.wyc.annotation.BotMethodParam;
 import com.wyc.annotation.BotService;
 import com.wyc.annotation.BotUser;
+import com.wyc.annotation.ReplyBotMethod;
+import com.wyc.annotation.ReplyMessageId;
 import com.wyc.chat.validator.CarNameValidator;
+import com.wyc.chat.validator.ContactValidator;
 import com.wyc.chat.validator.NicknameValidator;
 import com.wyc.chat.validator.PlateValidator;
+import com.wyc.db.model.Car;
+import com.wyc.db.model.Car.CarBuilder;
 import com.wyc.db.model.DriveMessage;
 import com.wyc.db.model.DriveMessage.DriveMessageType;
+import com.wyc.db.model.DriveMessageDelivery;
 import com.wyc.db.model.Person;
+import com.wyc.db.repository.CarRepository;
+import com.wyc.db.repository.DriveMessageDeliveryRepository;
 import com.wyc.db.repository.DriveMessageRepository;
 import com.wyc.db.repository.PersonRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
 @BotService(title="Водитель", roles = Person.Role.DRIVER)
 @Service
+@Slf4j
 public class DriverBotService {
 	
 	@Autowired
@@ -30,6 +42,12 @@ public class DriverBotService {
 	
 	@Autowired
 	private DriveMessageRepository driveMessageRepository;
+	
+	@Autowired
+	private DriveMessageDeliveryRepository driveMessageDeliveryRepository;
+	
+	@Autowired
+	private CarRepository carRepository;
 	
 	@BotMethod(title="Заполнить профиль (номер, ник, авто)")
 	public String setNumber(
@@ -65,9 +83,10 @@ public class DriverBotService {
 		DriveMessage driveMessage = DriveMessage.builder()
 				.from(person)
 				.carNumberTo(number)
-				.sentDate(new Date())
+				.creationDate(new Date())
 				.messageType(messageType)
 				.message(messageType.getTitle())
+				.smsMessage(messageType.getSms())
 				.longitude(location.getLongitude())
 				.latitude(location.getLatitude())
 				.build();
@@ -80,6 +99,7 @@ public class DriverBotService {
 		
 	}
 	
+	/*
 	@BotMethod(title="Просмотреть последние сообщения.")
 	public String[] getLastMessages(@BotUser Integer currentUserId) {
 		List<DriveMessage> messages = driveMessageRepository.findByToId(currentUserId);
@@ -88,5 +108,58 @@ public class DriverBotService {
 			return new String[]{"У вас нет принятых сообщений."};
 		}
 		return lst.toArray(new String[lst.size()]);
+	}
+	*/
+	
+	
+	@BotMethod(title="Сообщить номер телефона владельца.")
+	public String reportCarPhone(
+			@BotMethodParam(title="Номер автомобиля", validators=PlateValidator.class) String number,
+			@BotMethodParam(title="Контакт владельца (введите номер телефона или пришлите контакт из адресной книги)", validators=ContactValidator.class) Message contactInfo,
+			@BotUser Integer currentUserId) {
+		
+		Person reporter = Person.builder().id(currentUserId).build();
+		CarBuilder builder = Car.builder()
+			.number(number)
+			.creationDate(new Date())
+			.reporter(reporter);
+		
+		if(contactInfo.getText() != null) {
+			builder = builder.ownerPhoneNumber(contactInfo.getText());
+		}
+		
+		if(contactInfo.getContact() != null) {
+			Contact contact = contactInfo.getContact();
+			builder = builder
+					.ownerFirstName(contact.getFirstName())
+					.ownerLastName(contact.getLastName())
+					.ownerPhoneNumber(contact.getPhoneNumber())
+					.ownerUserId(contact.getUserID())
+					;
+		}
+		Car car = builder.build();
+		carRepository.save(car);
+		return "Спасибо за предоставленную информацию";
+	}
+	
+	@ReplyBotMethod
+	public void reply(DriveMessageType messageType, @ReplyMessageId Integer replyMessageId) {
+		log.info("Reply");
+		Optional<DriveMessageDelivery> messageDeliveryOpt = driveMessageDeliveryRepository.findBySentMessageId(replyMessageId);
+		if(messageDeliveryOpt.isPresent()) {
+			DriveMessageDelivery replyMessageDelivery = messageDeliveryOpt.get();
+			DriveMessage replyMessage = replyMessageDelivery.getDriveMessage();
+			DriveMessage driveMessage = DriveMessage.builder()
+					.from(replyMessage.getFrom())
+					.carNumberTo(replyMessage.getFrom().getCarNumber())
+					.creationDate(new Date())
+					.messageType(messageType)
+					.message(messageType.getTitle())
+					.smsMessage(messageType.getSms())
+					.repliedTo(replyMessage)
+					.build();
+			driveMessageRepository.save(driveMessage);
+			
+		}
 	}
 }

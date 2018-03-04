@@ -3,11 +3,13 @@ package com.wyc.chat.validator;
 import java.util.Collections;
 import java.util.List;
 
-import com.wyc.chat.BotParamValidator;
-
 import jersey.repackaged.com.google.common.collect.Lists;
 
-public class CarNameValidator implements BotParamValidator {
+public class CarNameValidator extends BaseValidator<String> {
+
+	public CarNameValidator() {
+		super(String.class);
+	}
 
 	@Override
 	public List<String> validate(String s) {

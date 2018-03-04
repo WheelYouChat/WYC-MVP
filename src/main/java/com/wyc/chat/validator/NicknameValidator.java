@@ -3,11 +3,13 @@ package com.wyc.chat.validator;
 import java.util.Collections;
 import java.util.List;
 
-import com.wyc.chat.BotParamValidator;
-
 import jersey.repackaged.com.google.common.collect.Lists;
 
-public class NicknameValidator implements BotParamValidator {
+public class NicknameValidator extends BaseValidator<String> {
+
+	public NicknameValidator() {
+		super(String.class);
+	}
 
 	@Override
 	public List<String> validate(String s) {

@@ -3,19 +3,22 @@ package com.wyc.telegram;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.util.Pair;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.api.objects.CallbackQuery;
+import org.telegram.telegrambots.api.objects.Contact;
 import org.telegram.telegrambots.api.objects.Location;
 import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
@@ -28,23 +31,35 @@ import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardButto
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
-import org.telegram.telegrambots.exceptions.TelegramApiValidationException;
 
 import com.wyc.annotation.BotMethod;
 import com.wyc.annotation.BotMethodParam;
 import com.wyc.annotation.BotService;
 import com.wyc.annotation.BotUser;
+import com.wyc.annotation.ReplyBotMethod;
+import com.wyc.annotation.ReplyMessageId;
 import com.wyc.chat.BotParamValidator;
+import com.wyc.chat.EnumMenu;
 import com.wyc.chat.HasTitle;
+import com.wyc.db.model.Car;
 import com.wyc.db.model.ContextItem;
 import com.wyc.db.model.DriveMessage;
+import com.wyc.db.model.DriveMessage.DriveMessageType;
+import com.wyc.db.model.DriveMessageDelivery;
+import com.wyc.db.model.DriveMessageDelivery.DeliveryType;
+import com.wyc.db.model.IncomingMessage;
 import com.wyc.db.model.Person;
 import com.wyc.db.model.PersonContext;
+import com.wyc.db.repository.CarRepository;
 import com.wyc.db.repository.ContextItemRepository;
+import com.wyc.db.repository.DriveMessageDeliveryRepository;
 import com.wyc.db.repository.DriveMessageRepository;
+import com.wyc.db.repository.IncomingMessageRepository;
 import com.wyc.db.repository.PersonContextRepository;
 import com.wyc.db.repository.PersonRepository;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +73,8 @@ public class WYCBot extends TelegramLongPollingBot {
 	
 	private PersonRepository personRepository;
 
+	private CarRepository carRepository;
+
 	private PersonContextRepository personContextRepository;
 	
 	private ContextItemRepository contextItemRepository;
@@ -66,9 +83,14 @@ public class WYCBot extends TelegramLongPollingBot {
 
 	private DriveMessageRepository driveMessageRepository;
 
+	private DriveMessageDeliveryRepository driveMessageDeliveryRepository;
+
+	private IncomingMessageRepository incomingMessageRepository;
+
 
 	@Override
 	public void onUpdateReceived(Update update) {
+		saveMessage(update);
 		
 		if(update.getMessage() != null) {
 			Message msg = update.getMessage();
@@ -143,7 +165,7 @@ public class WYCBot extends TelegramLongPollingBot {
 			String data = callback.getData();
 			if(isEnum(data)) {
 				String enumValue = data.substring(1);
-				processAnswer(enumValue, null, from.getId().toString(), callback.getMessage().getMessageId(), callback.getInlineMessageId(), from);
+				processAnswer(enumValue, null, null, from.getId().toString(), callback.getMessage().getMessageId(), callback.getInlineMessageId(), from);
 			} else if(isMethod(data)) {
 				String methodId = data;
 				
@@ -157,7 +179,7 @@ public class WYCBot extends TelegramLongPollingBot {
 						personContextRepository.delete(pc);
 					});
 					
-					Method method = bm.getSecond();
+					Method method = bm.getMethod();
 					
 					// Create new context
 					PersonContext personContext = PersonContext.builder()
@@ -167,9 +189,9 @@ public class WYCBot extends TelegramLongPollingBot {
 							.creationDate(new Date())
 							.build();
 					personContextRepository.save(personContext);
-					personContext = prepareContext(personContext, method);
+					personContext = prepareContext(personContext, method, methodId, callback.getMessage().getMessageId());
 					if(contextIsReady(personContext, method)) {
-						invoke(bm.getFirst(), personContext, method, null);
+						invoke(bm.getBean(), personContext, method, null);
 					} else {
 						SendMessage sendMessage = getNextQuestion(personContext, method);
 	
@@ -185,17 +207,52 @@ public class WYCBot extends TelegramLongPollingBot {
 					}
 					
 				});
+			} else if(callback.getMessage() != null) {
+				
 			}
 		}
 		
 	}
 	
+	protected void saveMessage(Update update) {
+		Integer senderId = null;
+		IncomingMessage message = new IncomingMessage();
+		if(update.getMessage() != null && update.getMessage().getFrom() != null) {
+			senderId = update.getMessage().getFrom().getId();
+			message.setText(update.getMessage().getText());
+			Location location = update.getMessage().getLocation();
+			if(location != null) {
+				message.setLatitude(location.getLatitude());
+				message.setLongitude(location.getLongitude());
+			}
+			
+			Contact contact = update.getMessage().getContact();
+			if(contact != null) {
+				message.setContactFirstName(contact.getFirstName());
+				message.setContactLastName(contact.getLastName());
+				message.setContactPhoneNumber(contact.getPhoneNumber());
+				message.setContactUserId(contact.getUserID());
+			}
+		}
+		if(senderId == null && update.getCallbackQuery() != null && update.getCallbackQuery().getFrom() != null) {
+			CallbackQuery callback = update.getCallbackQuery();
+			senderId = callback.getFrom().getId();
+			message.setData(callback.getData());
+		}
+				 
+		if(senderId != null) {
+			message.setSenderId(senderId);
+			message.setCreationDate(new Date());
+			incomingMessageRepository.save(message);
+		}
+	}
+
 	private boolean isEnum(String data) {
 		return data.startsWith("-");
 	}
 	
 	private boolean isMethod(String data) {
-		return data.split("[.]").length == 2;
+		return parseMthodId(data).length >= 2;
 	}
 	
 	private InlineKeyboardMarkup createMenu() {
@@ -231,22 +288,23 @@ public class WYCBot extends TelegramLongPollingBot {
 	}
 	
 	private void processAnswer(Message msg) {
-		processAnswer(msg.getText(), msg.getLocation(), msg.getChatId().toString(), msg.getMessageId(), null, msg.getFrom());
+		processAnswer(msg.getText(), msg, msg.getContact(), msg.getChatId().toString(), msg.getMessageId(), null, msg.getFrom());
 	}
 	
-	private void processAnswer(String value, Location location, String chatId, Integer replyToMessageId, String inlineMessageId, User from) {
+	private void processAnswer(String value, Message message, Contact contact, String chatId, Integer replyToMessageId, String inlineMessageId, User from) {
 		// Handle answer for a question
+		Location location = message == null ? null : message.getLocation();
 		Optional<PersonContext> pcOpt = getPersonContext(from);
 		pcOpt.ifPresent(pc -> {
 			
-			Optional<Pair<Object, Method>> methodOpt = findMethod(pc.getMethod());
+			Optional<MethodDesc> methodOpt = findMethod(pc.getMethod());
 			methodOpt.ifPresent(bm -> {
-				Method method = bm.getSecond();
+				Method method = bm.getMethod();
 				int idx = getNextQuestionIdx(pc, method);
 				
 				if(idx >= 0) {
 					// Check
-					List<String> errors = checkValue(method, idx, value, location);
+					List<String> errors = checkValue(method, idx, value, message);
 					if(!errors.isEmpty()) {
 						// Value is incorrect 
 						String errorMessage = createErrorMessage(errors);
@@ -272,6 +330,10 @@ public class WYCBot extends TelegramLongPollingBot {
 								.idx(idx)
 								.personContext(pc)
 								.value(v)
+								.contactFirstName(contact == null ? null : contact.getFirstName())
+								.contactLastName(contact == null ? null : contact.getLastName())
+								.contactPhoneNumber(contact == null ? null : contact.getPhoneNumber())
+								.contactUserId(contact == null ? null : contact.getUserID())
 								.creationDate(new Date())
 								.build();
 						contextItemRepository.save(contextItem);
@@ -301,7 +363,7 @@ public class WYCBot extends TelegramLongPollingBot {
 						
 						
 						if(contextIsReady(pcNew, method)) {
-							invoke(bm.getFirst(), pcNew, method, replyToMessageId);
+							invoke(bm.getBean(), pcNew, method, replyToMessageId);
 						} else {
 							SendMessage sendMessage = getNextQuestion(pcNew, method);
 							sendMessage.setChatId(chatId);
@@ -325,7 +387,8 @@ public class WYCBot extends TelegramLongPollingBot {
 		return String.join("\n ", errors.toArray(new String[errors.size()])) + "\nПопробуйте еще раз.";
 	}
 
-	private List<String> checkValue(Method method, int idx, String text, Location location) {
+	private List<String> checkValue(Method method, int idx, String text, Message message) {
+		Location location = message == null ? null : message.getLocation();
 		List<String> res = new ArrayList<>();
 		Class<?>[] paramTypes = method.getParameterTypes();
 		if(paramTypes != null && paramTypes.length > idx && idx >= 0) {
@@ -346,7 +409,16 @@ public class WYCBot extends TelegramLongPollingBot {
 				BotParamValidator validator;
 				try {
 					validator = validatorClass.newInstance();
-					List<String> newErrs = validator.validate(text);
+					List<String> newErrs = null;
+					if(validator.getValidationClass() == String.class) {
+						newErrs = validator.validate(text);
+					} else if(validator.getValidationClass() == Message.class) {
+						newErrs = validator.validate(message);
+					} else if(validator.getValidationClass() == Object.class) {
+						newErrs = validator.validate(text);
+					} else {
+						throw new IllegalArgumentException("Unknown validation class " + validator.getValidationClass());
+					}
 					res.addAll(newErrs);
 				} catch (InstantiationException | IllegalAccessException e) {
 					log.error("Error creating validator " + validatorClass, e);
@@ -365,6 +437,57 @@ public class WYCBot extends TelegramLongPollingBot {
 				args[item.getIdx()] = item.getValue();
 			} else if(paramType == int.class || paramType == Integer.class) {
 				args[item.getIdx()] = Integer.parseInt(item.getValue());
+			} else if(paramType == Message.class) {
+				Contact contact = new Contact() {
+
+					@Override
+					public String getPhoneNumber() {
+						return item.getContactFirstName();
+					}
+
+					@Override
+					public String getFirstName() {
+						return item.getContactLastName();
+					}
+
+					@Override
+					public String getLastName() {
+						return item.getContactPhoneNumber();
+					}
+
+					@Override
+					public Integer getUserID() {
+						return item.getContactUserId();
+					}
+				};
+				
+				Message replyToMessage = new Message() {
+
+					@Override
+					public Integer getMessageId() {
+						return replayToMessageId;
+					}
+					
+				};
+				Message msg = new Message() {
+					@Override
+					public String getText() {
+						return item.getValue();
+					}
+
+					@Override
+					public Contact getContact() {
+						return contact;
+					}
+
+					@Override
+					public Message getReplyToMessage() {
+						return replyToMessage;
+					}
+
+				};
+				
+				args[item.getIdx()] = msg;
 			} else if(paramType == Location.class) {
 				String[] parts = item.getValue().split(":");
 				Location location = new Location() {
@@ -454,10 +577,22 @@ public class WYCBot extends TelegramLongPollingBot {
 		}
 	}
 	
-	private PersonContext prepareContext(PersonContext personContext, Method method) {
-		// TODO Auto-generated method stub
+	private PersonContext prepareContext(PersonContext personContext, Method method, String methodId, Integer replyMessageId) {
 		personContext.setItems(new ArrayList<>());
 
+		String[] parts = parseMthodId(methodId);
+		for(int i = 2; i < parts.length; i++) {
+			String value = parts[i];
+			ContextItem ci = ContextItem.builder()
+					.id(personContext.getId() + " - " + (i - 2))
+					.idx(i - 2)
+					.value(value)
+					.personContext(personContext)
+					.creationDate(new Date())
+					.build();
+			contextItemRepository.save(ci);
+		}
+		
 		Annotation[][] paramsAnnotations = method.getParameterAnnotations();
 		
 		for(int i = 0; i < paramsAnnotations.length; i++) {
@@ -468,6 +603,15 @@ public class WYCBot extends TelegramLongPollingBot {
 							.id(personContext.getId() + " - " + i)
 							.idx(i)
 							.value(personContext.getPerson().getId().toString())
+							.personContext(personContext)
+							.creationDate(new Date())
+							.build();
+					contextItemRepository.save(ci);
+				} else if(paramAnnotation instanceof ReplyMessageId) {
+					ContextItem ci = ContextItem.builder()
+							.id(personContext.getId() + " - " + i)
+							.idx(i)
+							.value(replyMessageId.toString())
 							.personContext(personContext)
 							.creationDate(new Date())
 							.build();
@@ -530,17 +674,24 @@ public class WYCBot extends TelegramLongPollingBot {
 	protected InlineKeyboardMarkup createInlineKeyboardForEnums(Object... enumValues) {
 		List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
 		for(Object enumValue : enumValues) {
-			List<InlineKeyboardButton> row = new ArrayList<>();
-			InlineKeyboardButton button = new InlineKeyboardButton();
-			button.setCallbackData("-" + enumValue.toString());
-			if(enumValue instanceof HasTitle) {
-				HasTitle hasTitle = (HasTitle) enumValue;
-				button.setText(hasTitle.getTitle());
-			} else {
-				button.setText(enumValue.toString());
+			boolean add = true;
+			if(enumValue instanceof EnumMenu) {
+				EnumMenu enumMenu = (EnumMenu) enumValue;
+				add = enumMenu.isRootMenu();
 			}
-			row.add(button);
-			keyboard.add(row);
+			if(add) {
+				List<InlineKeyboardButton> row = new ArrayList<>();
+				InlineKeyboardButton button = new InlineKeyboardButton();
+				button.setCallbackData("-" + enumValue.toString());
+				if(enumValue instanceof HasTitle) {
+					HasTitle hasTitle = (HasTitle) enumValue;
+					button.setText(hasTitle.getTitle());
+				} else {
+					button.setText(enumValue.toString());
+				}
+				row.add(button);
+				keyboard.add(row);
+			}
 		}
 		InlineKeyboardMarkup replyMarkup = new InlineKeyboardMarkup();
 		replyMarkup.setKeyboard(keyboard);
@@ -578,50 +729,168 @@ public class WYCBot extends TelegramLongPollingBot {
 		return personContextRepository.findByPersonId(from.getId());
 	}
 
-	private Optional<Pair<Object, Method>> findMethod(String methodId) {
-		Optional<Pair<Object, Method>> res = Optional.<Pair<Object, Method>>empty();
-		String[] parts = methodId.split("[.]");
-		if(parts.length == 2) {
+	@Builder
+	@AllArgsConstructor
+	@Getter
+	public static class MethodDesc {
+		private String beanName;
+		private Object bean;
+		private Method method;
+		private String args[];
+	}
+
+	private String[] parseMthodId(String methodId) {
+		return methodId.split("[.]");
+	}
+
+	private Optional<MethodDesc> findMethod(String methodId) {
+		Optional<MethodDesc> res = Optional.<MethodDesc>empty();
+		String[] parts = parseMthodId(methodId);
+		if(parts.length >= 2) {
 			Map<String, Object> beans = applicationContext.getBeansWithAnnotation(BotService.class);
 			Object bean = beans.get(parts[0]);
 			Optional<Method> mOpt = Arrays.stream(bean.getClass().getMethods()).filter(m -> m.getName().equals(parts[1])).findFirst();
 			if(mOpt.isPresent()) {
-				res = Optional.<Pair<Object, Method>>of(Pair.<Object, Method>of(bean, mOpt.get()));
+				// res = Optional.<Pair<Object, Method>>of(Pair.<Object, Method>of(bean, mOpt.get()));
+				String args[] = new String[parts.length - 2];
+				for(int i = 2; i< parts.length; i++) {
+					args[i - 2] = parts[i];
+				}
+				res = Optional.<MethodDesc>of(MethodDesc.builder()
+						.bean(bean)
+						.method(mOpt.get())
+						.args(args)
+						.build());
+				
 			}
 		}
 		return res;
 	}
 	
 	public void deliveryMessages() {
-		Iterable<DriveMessage> messages = driveMessageRepository.findByDeliveredDateIsNullOrderByIdDesc();
+		Iterable<DriveMessage> messages = driveMessageRepository.findByDeliveredIsFalseOrderByIdDesc();
 		for(DriveMessage message : messages) {
 			if(message.getLongitude() == null || message.getLocationTitle() != null) {
+				List<Person> persons = new ArrayList();
 				String carNumber = message.getCarNumberTo();
-				carNumber = carNumber.toUpperCase();
-				carNumber = carNumber.replaceAll("[ ]+", "");
-				List<Person> persons = personRepository.findByCarNumber(carNumber);
+				
+				if(carNumber != null) {
+					// Сообщение послали на номер авто
+					carNumber = carNumber.toUpperCase();
+					carNumber = carNumber.replaceAll("[ ]+", "");
+					// List<Person> persons = personRepository.findByCarNumber(carNumber);
+					
+					List<Car> cars = carRepository.findByNumber(carNumber);
+					Set<Integer> personIds = cars.stream().filter(car -> {return car.getOwnerUserId() != null;}).map(Car::getOwnerUserId).collect(Collectors.toSet());
+					persons = personRepository.findByCarNumberOrIdIn(carNumber, personIds);
+				} else if(message.getTo() != null){
+					// Сообщение послали напрямую в Telegram (ответили)
+					persons.add(message.getTo());
+				}
 				for(Person person : persons) {
 					SendMessage sendMessage = new SendMessage();
 					sendMessage.setChatId(person.getId().toString());
 					String text = createMessageText(message);
 					sendMessage.setText(text);
+					
+					ReplyKeyboard replyMarkup = createReplyButtons(message.getMessageType());
+					if(replyMarkup != null) {
+						sendMessage.setReplyMarkup(replyMarkup);
+					}
+
+					DriveMessageDelivery messageDelivery = DriveMessageDelivery.builder()
+							.deliveredDate(new Date())
+							.deliveryType(DeliveryType.TELEGRAM)
+							.to(person)
+							.driveMessage(message)
+							.build();
 					try {
-						sendMessage(sendMessage);
-						
-						message.setDeliveredDate(new Date());
+						Message sentMessage = sendMessage(sendMessage);
+						messageDelivery.setSentMessageId(sentMessage.getMessageId());
 					} catch (TelegramApiException e) {
 						log.error("Error delivering message", e);
-						message.setDeliveryException(e.toString());
+						messageDelivery.setDeliveryException(e.toString());
 					}
+					driveMessageDeliveryRepository.save(messageDelivery);
+					message.setDelivered(true);
 					driveMessageRepository.save(message);
 				}
 			}
 		}
 	}
 
+	private ReplyKeyboard createReplyButtons(DriveMessageType messageType) {
+		InlineKeyboardMarkup res = null;
+		
+		List<MethodDesc> replyMethods = getReplyMethods();
+		String dataPrefix = "";
+		if(replyMethods.size() > 0) {
+			MethodDesc methodDesc = replyMethods.get(0);
+			dataPrefix = methodDesc.getBeanName() + "." + methodDesc.getMethod().getName() + ".";
+		}
+		if(messageType != null && messageType.getAnswers().length > 0) {
+			res = new InlineKeyboardMarkup();
+			List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+			res.setKeyboard(keyboard);
+			for(DriveMessageType answer : messageType.getAnswers()) {
+				List<InlineKeyboardButton> row = new ArrayList<>();
+				InlineKeyboardButton button = new InlineKeyboardButton();
+				
+				button.setCallbackData(dataPrefix + answer.getName());
+				button.setText(answer.getTitle());
+				row.add(button);
+				keyboard.add(row );
+			}
+		}
+		return res;
+	}
+	
+	private List<MethodDesc> getReplyMethods() {
+		Map<String, Object> beans = applicationContext.getBeansWithAnnotation(BotService.class);
+		List<MethodDesc> res = new ArrayList<>();
+
+		InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+		List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+		inlineKeyboardMarkup.setKeyboard(keyboard);
+
+		log.debug("Start response. Scan services");
+		for(String name : beans.keySet()) {
+			Object bean = beans.get(name);
+			log.debug("  bot service " + name + " = " + bean);
+			Class<? extends Object> cls = bean.getClass();
+			for(Method m : cls.getMethods()) {
+				if(m.isAnnotationPresent(ReplyBotMethod.class)) {
+					res.add(MethodDesc.builder()
+							.bean(bean)
+							.beanName(name)
+							.method(m)
+							.build());
+				}
+			}
+		}
+		return res;
+		
+	}
+
 	protected String createMessageText(DriveMessage message) {
-		return "Вам поступило сообщение от " + message.getFrom().getUserDesc() + "\n" + message.getMessage() + 
-				(message.getLocationTitle() == null ? "" : "\nМесто: " + message.getLocationTitle());
+		String res = "";
+		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yy hh:mm");
+		if(message.getFrom() != null) {
+			res = res + "Вам пишет " + message.getFrom().getUserDesc() + "\n" + message.getMessage() + 
+					(message.getLocationTitle() == null ? "" : "\nМесто: " + message.getLocationTitle());
+		} else {
+			// Это ответ от незарегистрированного пользователя
+			res = res + "Вам пишет " + message.getRepliedTo().getCarNumberTo() + "\n" + message.getMessage();
+		}
+		res = res + (message.getLocationTitle() == null ? "" : "\nМесто: " + message.getLocationTitle()) + "\n";
+
+		if(message.getRepliedTo() != null) {
+			res = res + "\n\nв ответ на ваше сообщение\n" + message.getRepliedTo().getMessage() + 
+					"\n от " + sdf.format(message.getRepliedTo().getCreationDate());
+			
+		}
+		
+		return res;
 	}
 	
 }

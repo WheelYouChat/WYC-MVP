@@ -3,12 +3,14 @@ package com.wyc.chat.validator;
 import java.util.Collections;
 import java.util.List;
 
-import com.wyc.chat.BotParamValidator;
+public class EmptyValidator extends BaseValidator {
 
-public class EmptyValidator implements BotParamValidator {
+	public EmptyValidator() {
+		super(Object.class);
+	}
 
 	@Override
-	public List<String> validate(String s) {
+	public List<Object> validate(Object s) {
 		return Collections.emptyList();
 	}
 

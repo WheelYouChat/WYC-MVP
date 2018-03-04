@@ -5,11 +5,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.wyc.chat.BotParamValidator;
-
 import jersey.repackaged.com.google.common.collect.Lists;
 
-public class PlateValidator implements BotParamValidator {
+public class PlateValidator  extends BaseValidator<String>{
+
+	public PlateValidator() {
+		super(String.class);
+	}
 
 	private static Pattern PATTERNS[] = new Pattern[]{
 			Pattern.compile("[а-яА-Я][0-9][0-9][0-9][а-яА-Я][а-яА-Я][0-9][0-9][0-9]?"),

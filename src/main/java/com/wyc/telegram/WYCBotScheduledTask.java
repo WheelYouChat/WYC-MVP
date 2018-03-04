@@ -11,8 +11,11 @@ import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.exceptions.TelegramApiRequestException;
 
 import com.wyc.WYCConfig;
+import com.wyc.db.repository.CarRepository;
 import com.wyc.db.repository.ContextItemRepository;
+import com.wyc.db.repository.DriveMessageDeliveryRepository;
 import com.wyc.db.repository.DriveMessageRepository;
+import com.wyc.db.repository.IncomingMessageRepository;
 import com.wyc.db.repository.PersonContextRepository;
 import com.wyc.db.repository.PersonRepository;
 
@@ -40,6 +43,15 @@ public class WYCBotScheduledTask {
 	@Autowired
 	private DriveMessageRepository driveMessageRepository;
 	
+	@Autowired
+	private DriveMessageDeliveryRepository driveMessageDeliveryRepository;
+	
+	@Autowired
+	private IncomingMessageRepository incomingMessageRepository;
+	
+	@Autowired
+	private CarRepository carRepository;
+	
 	private WYCBot wycBot;
 
 	@PostConstruct
@@ -53,6 +65,9 @@ public class WYCBotScheduledTask {
 		wycBot.setContextItemRepository(contextItemRepository);
 		wycBot.setApplicationContext(applicationContext);
 		wycBot.setDriveMessageRepository(driveMessageRepository);
+		wycBot.setDriveMessageDeliveryRepository(driveMessageDeliveryRepository);
+		wycBot.setIncomingMessageRepository(incomingMessageRepository);
+		wycBot.setCarRepository(carRepository);
 		telegramBotsApi.registerBot(wycBot);
 		log.info("WYC Bot is registered");
 	}
@@ -60,5 +75,10 @@ public class WYCBotScheduledTask {
 	@Scheduled(fixedRate=10000)
 	public void deliveryMessages() {
 		wycBot.deliveryMessages();
+		deliverySmsMessages();
+	}
+	
+	protected void deliverySmsMessages() {
+		
 	}
 }
