@@ -36,10 +36,10 @@ public class DriveMessage {
 		// Ответы на жалобы
 		SORRY              ("Извините"),
 		SORRY_HURRY        ("Извините, очень спешил"),
-		I_WAS_NOT_THERE    ("Наверное вы ошиблись, меня там не было"),
-		CAR_IS_NOT_THERE   ("Наверное вы ошиблись, моя машина в другом месте"),
-		APOLOGY_ACCEPTED   ("Извинения приняты."),
-		APOLOGY_ACCEPTED_BUT_IT_WAS_DANGEROUS ("Извинения приняты. Но вы совершили очень опасный маневр."),
+		I_WAS_NOT_THERE    ("Вы ошиблись, меня там не было"),
+		CAR_IS_NOT_THERE   ("Вы ошиблись, машина в другом месте"),
+		APOLOGY_ACCEPTED   ("Извинения приняты"),
+		APOLOGY_ACCEPTED_BUT_IT_WAS_DANGEROUS ("Принято, но это был опасный маневр"),
 		PLEASE             ("Пожалуйста"),
 		I_DONT_HAVE_TO_GIVE_WAY("Я не обязан был уступать"),
 		

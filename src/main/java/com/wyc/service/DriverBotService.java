@@ -143,14 +143,15 @@ public class DriverBotService {
 	}
 	
 	@ReplyBotMethod
-	public void reply(DriveMessageType messageType, @ReplyMessageId Integer replyMessageId) {
+	public void reply(DriveMessageType messageType, @ReplyMessageId Integer replyMessageId, @BotUser String currentUserId) {
 		log.info("Reply");
+		Person sender = personRepository.findOne(Integer.parseInt(currentUserId));
 		Optional<DriveMessageDelivery> messageDeliveryOpt = driveMessageDeliveryRepository.findBySentMessageId(replyMessageId);
 		if(messageDeliveryOpt.isPresent()) {
 			DriveMessageDelivery replyMessageDelivery = messageDeliveryOpt.get();
 			DriveMessage replyMessage = replyMessageDelivery.getDriveMessage();
 			DriveMessage driveMessage = DriveMessage.builder()
-					.from(replyMessage.getFrom())
+					.from(sender)
 					.carNumberTo(replyMessage.getFrom().getCarNumber())
 					.creationDate(new Date())
 					.messageType(messageType)
