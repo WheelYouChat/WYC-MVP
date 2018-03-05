@@ -70,7 +70,7 @@ public class AnswerRestController extends ExceptionHandlerController {
 		DriveMessageDelivery delivery = answerService.getDriveMessageDelivery(request.getCode()).orElseThrow(() -> new ResourceNotFoundException("Cannot find delivery by code '" + request.getCode() + "'"));;
 		String phoneNumber = delivery.getPhoneNumber();
 		// Проверяем телефонный номер
-		if(!phoneNumber.endsWith(request.getPhone().trim())) {
+		if(phoneNumber == null || !phoneNumber.endsWith(request.getPhone().trim())) {
 			throw new UIException("Неправильный номер", "phone");
 		}
 		
