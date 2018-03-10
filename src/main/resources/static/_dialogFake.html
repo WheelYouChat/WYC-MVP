@@ -1,0 +1,161 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>Создать диалог</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.js"></script>
+     -->
+    <script src="//code.angularjs.org/snapshot/angular.min.js"></script>
+    
+    <style>
+    	.has-error {
+    		color:red;
+    	}
+    	
+    	.has-error input {
+    		border-color:red;
+    	}
+    	
+    	.panel{
+    		margin:40px;
+    	}
+    </style>
+  </head>
+
+  <body>
+  	<div class="container"  ng-app="dialogApp" ng-controller="dialogCtrl">
+  		<h1>Создать диалог</h1>
+  		<form>
+  			<div class="panel">
+  				<h6>Место события</h6>
+		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
+	 				<label class="col-sm-2 col-form-label" for="phone">Долгота</label>
+		  			<input type="text" name="longitude" ng-model="longitude" placeholder="30">
+		  		</div>
+		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
+	 				<label class="col-sm-2 col-form-label" for="phone">Широта</label>
+		  			<input type="text" name="latitude" ng-model="latitude" placeholder="60">
+		  		</div>
+		  		<div ng-show="longitude > 0 && latitude > 0">
+			  		<img ng-src="https://static-maps.yandex.ru/1.x/?ll={{longitude}},{{latitude}}&pt={{longitude}},{{latitude}},pmwtl&l=map&z=14&size={{500}},{{300}}"
+			  		width="500" height="300" alt="Место, где все произошло"/>
+			  	</div>
+	  		</div>
+  			<div class="panel">
+  				<h6>Подрезальщик : {{cutter.number}} {{cutter.color}} {{cutter.brand}}</h6>
+		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
+	 				<label class="col-sm-2 col-form-label" for="phone">Номер</label>
+		  			<input type="text" name="cutterNumber" ng-model="cutter.number" placeholder="А000АА177" maxlength="9" >
+		  		</div>
+		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
+	 				<label class="col-sm-2 col-form-label" for="phone">Цвет</label>
+		  			<input type="text" name="cutterColor" ng-model="cutter.color" placeholder="Черный" maxlength="9" >
+		  		</div>
+		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
+	 				<label class="col-sm-2 col-form-label" for="phone">Марка</label>
+		  			<input type="text" name="cutterBrand" ng-model="cutter.brand" placeholder="БМВ" maxlength="9" >
+		  		</div>
+	  		</div>
+	  		
+  			<div class="panel">
+  				<h6>Кого подрезали : {{cutted.number}} {{cutted.color}} {{cutted.brand}}</h6>
+		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
+	 				<label class="col-sm-2 col-form-label" for="phone">Номер</label>
+		  			<input type="text" name="cuttedNumber" ng-model="cutted.number" placeholder="А000АА177" maxlength="9" >
+		  		</div>
+		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
+	 				<label class="col-sm-2 col-form-label" for="phone">Цвет</label>
+		  			<input type="text" name="cuttedColor" ng-model="cutted.color" placeholder="красный" maxlength="9" >
+		  		</div>
+		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
+	 				<label class="col-sm-2 col-form-label" for="phone">Марка</label>
+		  			<input type="text" name="cuttedBrand" ng-model="cutted.brand" placeholder="Ниссан" maxlength="9" >
+		  		</div>
+	  		</div>
+	  		<div>
+	  			<button class="btn btn-large btn-success" ng-click="makeDialog()">Создать диалог</button>
+	  		</div>
+  		
+  		</form>
+	  	<table class="table">
+	  		<thead>
+	  			<tr>
+	  				<th>
+	  					Дата
+	  				</th>
+	  				<th>
+	  					Место
+	  				</th>
+	  				<th>
+	  					Подрезальщик
+	  				</th>
+	  				<th>
+	  					Кого подрезали
+	  				</th>
+	  			</tr>
+	  		</thead>
+	  		<tbody>
+	  			<tr ng-repeat="d in dialogs">
+	  				<td>
+	  					{{d.creationDate | date : 'dd.MM.yy hh:mm'}}
+	  				</td>
+	  				<td>
+	  					{{d.locationTitle}} ({{d.longitude}}:{{d.latitude}})
+	  				</td>
+	  				<td>
+	  					{{d.cutter.number}} {{d.cutter.brand}} {{d.cutter.color}}
+	  				</td>
+	  				<td>
+	  					{{d.cutted.number}} {{d.cutted.brand}} {{d.cutted.color}}
+	  				</td>
+	  			</tr>
+	  		</tbody>
+	  	</table>
+  	</div>
+  </body>
+</html>
+
+<script type="text/javascript">
+var app = angular.module("dialogApp", []); 
+app.controller("dialogCtrl", function($scope, $http) {
+	$scope.cutter = {};
+	$scope.cutted = {};
+    $scope.makeDialog = function() {
+    	$http.post('/makeDialogFaakkee', 
+    			{
+    				cutter : $scope.cutter,
+    				cutted : $scope.cutted,
+    				longitude : $scope.longitude,
+    				latitude  : $scope.latitude,
+    			})
+    	.then(function(data){
+    		console.log("Ok");
+    		loadDialogs();
+    		$scope.cutter = {};
+    		$scope.cutted = {};
+    	}, function(error) {
+    		console.log(error);
+    	});
+    }
+    
+    function loadDialogs() {
+	    $http.get("/dialogs").then(function(data){
+	    	console.log(data);
+	    	$scope.dialogs = data.data;
+	    	if($scope.dialogs.length > 0) {
+	    		$scope.longitude = $scope.dialogs[0].longitude; 
+	    		$scope.latitude = $scope.dialogs[0].latitude; 
+	    	}
+	    });
+    }
+    
+    loadDialogs();
+});
+</script>

@@ -31,5 +31,29 @@ public class PlateValidator  extends BaseValidator<String>{
 		return Lists.newArrayList("Номер должен быть в формате 'А000АА001' или '000ААА001' с любым количеством пробелов.");
 	}
 	
+	
+	// А123АА678
+	private static final int[] DIGIT_POSITIONS = new int[]{1, 2, 3, 6, 7, 8};
+	private static final int[] LETTER_POSITIONS = new int[]{0, 4, 5};
+	
+	public static String processNumber(String newNumber) {
+		String res = newNumber.replaceAll("[ ]+", "").toUpperCase();
+		StringBuilder sb = new StringBuilder(res);
+		int letterIdx = 0;
+		int digitIdx = 0;
+		for(int i = 0; i < res.length(); i++) {
+			char c = res.charAt(i);
+			int idx = -1;
+			if(Character.isLetter(c)) {
+				idx = LETTER_POSITIONS[letterIdx];
+				letterIdx++;
+			} else if(Character.isDigit(c)) {
+				idx = DIGIT_POSITIONS[digitIdx];
+				digitIdx++;
+			}
+			sb.setCharAt(idx, c);
+		}
+		return sb.toString();
+	}
 
 }

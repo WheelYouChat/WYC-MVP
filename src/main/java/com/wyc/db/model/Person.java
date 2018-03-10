@@ -5,6 +5,8 @@ import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import lombok.AllArgsConstructor;
@@ -22,11 +24,14 @@ import lombok.ToString;
 public class Person {
 	
 	public static enum Role {
-		DRIVER, ADMIN
+		DRIVER, ADMIN, FAKE
 	}
 	
 	@Id
-	private Integer id;
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private Long id;
+
+	private Integer telegramId;
 	
 	private String carNumber;
 
@@ -48,7 +53,6 @@ public class Person {
 	private String nickname;
 	
 	private String carName;
-
 	
 	public String getUserDesc() {
 		if(getNickname() == null && getCarName() == null) {

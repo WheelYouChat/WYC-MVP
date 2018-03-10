@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.api.objects.Contact;
 import org.telegram.telegrambots.api.objects.Location;
@@ -55,14 +56,15 @@ public class DriverBotService {
 			@BotMethodParam(title="Ваш ник (например Лихач)", validators=NicknameValidator.class) String newNickname, 
 			@BotMethodParam(title="Описание вашего автомобиля (например Красная Феррари)", validators=CarNameValidator.class) String newCarName, 
 			@BotUser String currentUserId) {
-		Person person = personRepository.findOne(Integer.parseInt(currentUserId));
+		Person person = personRepository.findByTelegramId(Integer.parseInt(currentUserId)).orElseThrow(() -> new ResourceNotFoundException("Can not find person by telegram id = '" + currentUserId + "'"));
+		newNumber = PlateValidator.processNumber(newNumber);
 		person.setCarNumber(newNumber);
 		person.setNickname(newNickname);
 		person.setCarName(newCarName);
 		personRepository.save(person);
 		return "Спасибо за регистрацию.\nТеперь все будут видеть вас как '" + person.getUserDesc() + "'"; 
 	}
-	
+
 	/*
 	@BotMethod(title="Сообщить модель авто")
 	public void setCarModel(@BotMethodParam(title="Марка автомобиля") String newCar, @BotUser String currentUserId) {
@@ -78,8 +80,9 @@ public class DriverBotService {
 			@BotMethodParam(title="Введите сообщение") DriveMessageType messageType,
 			@BotMethodParam(title="Укажите место где произошло") Location location,
 			@BotUser Integer currentUserId) {
-		Person person = personRepository.findOne(currentUserId);
+		Person person = personRepository.findByTelegramId(currentUserId).orElseThrow(() -> new ResourceNotFoundException("Can not find person by telegram id = '" + currentUserId + "'"));
 		// person.setCarNumber(newNumber);
+		number = PlateValidator.processNumber(number);
 		DriveMessage driveMessage = DriveMessage.builder()
 				.from(person)
 				.carNumberTo(number)
@@ -118,7 +121,7 @@ public class DriverBotService {
 			@BotMethodParam(title="Контакт владельца (введите номер телефона или пришлите контакт из адресной книги)", validators=ContactValidator.class) Message contactInfo,
 			@BotUser Integer currentUserId) {
 		
-		Person reporter = Person.builder().id(currentUserId).build();
+		Person reporter = Person.builder().telegramId(currentUserId).build();
 		CarBuilder builder = Car.builder()
 			.number(number)
 			.creationDate(new Date())
@@ -145,7 +148,7 @@ public class DriverBotService {
 	@ReplyBotMethod
 	public void reply(DriveMessageType messageType, @ReplyMessageId Integer replyMessageId, @BotUser String currentUserId) {
 		log.info("Reply");
-		Person sender = personRepository.findOne(Integer.parseInt(currentUserId));
+		Person sender = personRepository.findByTelegramId(Integer.parseInt(currentUserId)).orElseThrow(() -> new ResourceNotFoundException("Can not find person by telegram id = '" + currentUserId + "'"));
 		Optional<DriveMessageDelivery> messageDeliveryOpt = driveMessageDeliveryRepository.findBySentMessageId(replyMessageId);
 		if(messageDeliveryOpt.isPresent()) {
 			DriveMessageDelivery replyMessageDelivery = messageDeliveryOpt.get();

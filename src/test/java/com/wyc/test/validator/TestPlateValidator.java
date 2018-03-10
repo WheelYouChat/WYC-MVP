@@ -44,4 +44,23 @@ public class TestPlateValidator extends TestCase{
 		error = plateValidator.validate("Р933СМ9433");
 		assertFalse(error.isEmpty());
 	}
+	
+	public static String[] PROCESS_EXAMPLES = new String[]{
+		"А000АА99", "А000АА99",
+		"а000аа99", "А000АА99",
+		"а000аа999", "А000АА999",
+		"000аАа999", "А000АА999",
+		"ААА000999", "А000АА999",
+		"сми000999", "С000МИ999",
+		"  с  м  и  0    0   0  7  7   ", "С000МИ77",
+	};
+	
+	@Test
+	public void testProcessing() {
+		for(int i = 0; i < PROCESS_EXAMPLES.length; i+= 2) {
+			String number = PROCESS_EXAMPLES[i];
+			String actual = PROCESS_EXAMPLES[i + 1];
+			assertEquals(PlateValidator.processNumber(number), actual);
+		}
+	}
 }

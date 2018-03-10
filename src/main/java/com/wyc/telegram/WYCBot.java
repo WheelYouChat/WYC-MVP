@@ -14,9 +14,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.api.objects.CallbackQuery;
 import org.telegram.telegrambots.api.objects.Contact;
 import org.telegram.telegrambots.api.objects.Location;
@@ -94,23 +96,34 @@ public class WYCBot extends TelegramLongPollingBot {
 		
 		if(update.getMessage() != null) {
 			Message msg = update.getMessage();
+			
+			DeleteMessage deleteMessage = new DeleteMessage();
+			deleteMessage.setChatId(msg.getChatId().toString());
+			deleteMessage.setMessageId(msg.getMessageId());
+			try {
+				deleteMessage(deleteMessage);
+			} catch (TelegramApiException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
 			if(msg.getText() != null && msg.getText().equals("/start")) {
 				
 				// Contact contact = msg.getContact();
 				User contact = msg.getFrom();
 				
-				Person existingPerson = personRepository.findOne(contact.getId());
+				Optional<Person> existingPersonOpt = personRepository.findByTelegramId(contact.getId());
 
 				SendMessage sendMessage = new SendMessage();
 				
-				if(existingPerson == null) {
+				if(!existingPersonOpt.isPresent()) {
 				
 					Person p = Person.builder()
 							.carNumber("")
 							.userName(contact.getUserName())
 							.firstName(contact.getFirstName())
 							.lastName(contact.getLastName())
-							.id(contact.getId())
+							.telegramId(contact.getId())
 							.languageCode(contact.getLanguageCode())
 							.registrationDate(new Date())
 							.build();
@@ -195,7 +208,7 @@ public class WYCBot extends TelegramLongPollingBot {
 					} else {
 						SendMessage sendMessage = getNextQuestion(personContext, method);
 	
-						sendMessage.setChatId(user.getId().toString());
+						sendMessage.setChatId(user.getTelegramId().toString());
 	
 						try {
 							Message sentMessage = sendMessage(sendMessage);
@@ -340,6 +353,8 @@ public class WYCBot extends TelegramLongPollingBot {
 						PersonContext pcNew = personContextRepository.findOne(pc.getId());
 						
 						Class<?> paramType = method.getParameterTypes()[idx];
+						Annotation[] paramAnnotations = method.getParameterAnnotations()[idx];
+						Optional<Annotation> botMethodAnnotationOpt = Arrays.stream(paramAnnotations).filter(a -> a instanceof BotMethodParam).findFirst();
 						if(paramType.isEnum() && replyToMessageId != null) {
 							Object[] enumValues = paramType.getEnumConstants();
 							String finalV = v;
@@ -349,13 +364,31 @@ public class WYCBot extends TelegramLongPollingBot {
 								// editMessageReplyMarkup.setInlineMessageId(inlineMessageId);
 								editMessageReplyMarkup.setMessageId(replyToMessageId);
 
-								InlineKeyboardMarkup replyMarkup = createInlineKeyboardForEnums(enumValue);
+								InlineKeyboardMarkup replyMarkup = new InlineKeyboardMarkup(); // createInlineKeyboardForEnums(enumValue);
 								editMessageReplyMarkup.setReplyMarkup(replyMarkup );
 								// Change Enum
 								try {
 									editMessageReplyMarkup(editMessageReplyMarkup);
 								} catch (TelegramApiException e) {
-									log.error("Error editing replay markup.", e);
+									log.error("Error editing reply markup.", e);
+								}
+								
+								if(botMethodAnnotationOpt.isPresent()) {
+									BotMethodParam botMethodAnnotation = (BotMethodParam) botMethodAnnotationOpt.get();
+									EditMessageText editMessageText = new EditMessageText();
+									editMessageText.setChatId(chatId);
+									editMessageText.setMessageId(replyToMessageId);
+									String title = enumValue.toString();
+									if(enumValue instanceof HasTitle) {
+										title = ((HasTitle)enumValue).getTitle();
+									}
+									editMessageText.setText(botMethodAnnotation.title() + "\n\nВы выбрали :" + title);
+									try {
+										editMessageText(editMessageText);
+									} catch(TelegramApiException e) {
+										log.error("Error editing message text.", e);
+										
+									}
 								}
 								
 							});
@@ -529,7 +562,7 @@ public class WYCBot extends TelegramLongPollingBot {
 				for(String text : arrResult) {
 					
 					SendMessage sendMessage = new SendMessage();
-					sendMessage.setChatId(personContext.getPerson().getId().toString());
+					sendMessage.setChatId(personContext.getPerson().getTelegramId().toString());
 					sendMessage.setReplyToMessageId(replayToMessageId);
 					sendMessage.setText(text);
 					try {
@@ -545,7 +578,7 @@ public class WYCBot extends TelegramLongPollingBot {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		clearContext(personContext.getPerson().getId());
+		clearContext(personContext.getPerson().getTelegramId());
 	}
 
 	private String getSuccessMessage(Method m) {
@@ -556,8 +589,8 @@ public class WYCBot extends TelegramLongPollingBot {
 		return "ok";
 	}
 
-	private void clearContext(Integer personId) {
-		Optional<PersonContext> pc = personContextRepository.findByPersonId(personId);
+	private void clearContext(Integer telegramId) {
+		Optional<PersonContext> pc = personContextRepository.findByPersonTelegramId(telegramId);
 		pc.ifPresent(personContext -> {
 			List<ContextItem> items = contextItemRepository.findByPersonContextId(personContext.getId());
 			items.forEach(item -> contextItemRepository.delete(item));
@@ -602,7 +635,7 @@ public class WYCBot extends TelegramLongPollingBot {
 					ContextItem ci = ContextItem.builder()
 							.id(personContext.getId() + " - " + i)
 							.idx(i)
-							.value(personContext.getPerson().getId().toString())
+							.value(personContext.getPerson().getTelegramId().toString())
 							.personContext(personContext)
 							.creationDate(new Date())
 							.build();
@@ -722,11 +755,11 @@ public class WYCBot extends TelegramLongPollingBot {
 	}
 	
 	private Person getPerson(User from) {
-		return personRepository.findOne(from.getId());
+		return personRepository.findByTelegramId(from.getId()).orElse(null);
 	}
 	
 	private Optional<PersonContext> getPersonContext(User from) {
-		return personContextRepository.findByPersonId(from.getId());
+		return personContextRepository.findByPersonTelegramId(from.getId());
 	}
 
 	@Builder
@@ -770,7 +803,7 @@ public class WYCBot extends TelegramLongPollingBot {
 	public void deliveryMessages() {
 		Iterable<DriveMessage> messages = driveMessageRepository.findByDeliveredIsFalseOrderByIdDesc();
 		for(DriveMessage message : messages) {
-			if(message.getLongitude() == null || message.getLocationTitle() != null) {
+			if(message.getTo() != null && message.getTo().getTelegramId() != null && (message.getLongitude() == null || message.getLocationTitle() != null)) {
 				List<Person> persons = new ArrayList();
 				String carNumber = message.getCarNumberTo();
 				

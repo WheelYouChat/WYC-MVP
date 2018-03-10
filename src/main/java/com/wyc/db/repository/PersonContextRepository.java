@@ -9,6 +9,7 @@ import com.wyc.db.model.PersonContext;
 
 @Repository
 public interface PersonContextRepository extends PagingAndSortingRepository<PersonContext, String>{
-	Optional<PersonContext> findByPersonId(Integer personId);
-	void removeByPersonId(Integer personId);
+	Optional<PersonContext> findByPersonId(Long personId);
+	Optional<PersonContext> findByPersonTelegramId(Integer telegramId);
+	void removeByPersonId(Long personId);
 }

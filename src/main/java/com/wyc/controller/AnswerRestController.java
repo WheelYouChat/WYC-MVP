@@ -1,10 +1,10 @@
 package com.wyc.controller;
 
+import java.util.Date;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
-import org.modelmapper.spi.MatchingStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -87,5 +87,31 @@ public class AnswerRestController extends ExceptionHandlerController {
 		}
 		DriveMessage answerMessage = answerService.answerTo(message, messageType);
 		return answerMessage;
+	}
+	
+	@Data
+	public static class DialogPerson {
+		private String number, brand, color;
+	}
+	
+	@Data
+	public static class Dialog {
+		private DialogPerson cutter, cutted;
+		private float longitude, latitude;
+		private String locationTitle;
+		private Date creationDate;
+		
+	}
+
+	@RequestMapping(path="/makeDialogFaakkee", method=RequestMethod.POST)
+	public Dialog makeFakeDialog(@RequestBody Dialog dialog) {
+		answerService.makeFakeDialog(dialog);
+		return dialog;
+		
+	}
+	
+	@RequestMapping(path="/dialogs", method=RequestMethod.GET)
+	public List<Dialog> getFakeDialogs() {
+		return answerService.getFakeDialogs();
 	}
 }
