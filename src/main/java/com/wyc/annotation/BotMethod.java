@@ -11,4 +11,5 @@ public @interface BotMethod {
 	String title();
 	String url() default "";
 	String successMessage() default "ok";
+	int order() default 0;
 }

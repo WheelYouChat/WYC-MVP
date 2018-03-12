@@ -2,6 +2,7 @@ package com.wyc.db.model;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -43,6 +44,13 @@ public class DriveMessageDelivery {
 	private Person to;
 
 	private Date deliveredDate;
+
+	private Date sentDate;
+	
+	private String smsId;
+	
+	@Column(columnDefinition="TEXT")
+	private String smsSentResponse;
 	
 	private String deliveryException;
 	

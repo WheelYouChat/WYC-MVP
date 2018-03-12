@@ -3,10 +3,10 @@ package com.wyc.avinfo;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 
 import com.wyc.db.model.AVICar;
 import com.wyc.db.repository.AVICarRepository;
+import com.wyc.exception.ResourceNotFoundException;
 
 import okhttp3.OkHttpClient;
 

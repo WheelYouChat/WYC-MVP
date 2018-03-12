@@ -1,23 +1,26 @@
 package com.wyc.controller;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.wyc.db.model.DriveMessage;
 import com.wyc.db.model.DriveMessage.DriveMessageType;
 import com.wyc.db.model.DriveMessageDelivery;
 import com.wyc.dto.DriveMessageDto;
+import com.wyc.exception.ResourceNotFoundException;
 import com.wyc.service.AnswerService;
+import com.wyc.sms.sender.smsaero.SMSAeroSender;
 
 import lombok.Data;
 import lombok.ToString;
@@ -29,6 +32,9 @@ public class AnswerRestController extends ExceptionHandlerController {
 	
 	@Autowired
 	private AnswerService answerService;
+	
+	@Autowired
+	private SMSAeroSender sender;
 
 	@Data
 	@ToString
@@ -111,7 +117,17 @@ public class AnswerRestController extends ExceptionHandlerController {
 	}
 	
 	@RequestMapping(path="/dialogs", method=RequestMethod.GET)
-	public List<Dialog> getFakeDialogs() {
-		return answerService.getFakeDialogs();
+	public List<Dialog> getFakeDialogs(@RequestParam(name="max", defaultValue="0") int max) {
+		List<Dialog> res = answerService.getFakeDialogs();
+		if(max > 0 && res.size() > max) {
+			res = res.subList(0, max);
+		}
+		return res;
+	}
+	
+	@RequestMapping(path="/test-sms", method=RequestMethod.GET)
+	public Integer testSms() throws IOException {
+		sender.sendMessage("79112127484", "Привет от lihachat.ru/39");
+		return 0;
 	}
 }

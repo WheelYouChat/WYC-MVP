@@ -16,7 +16,7 @@ public class AnswerController {
 	@Autowired
 	private PageVisitService pageVisitService;
 	
-	@RequestMapping(path="/a/{code:[A-Za-z0-9]+}", method=RequestMethod.GET)
+	@RequestMapping(path="/{code:[A-Za-z0-9]{2,7}}", method=RequestMethod.GET)
 	public String answerPage(@PathVariable("code") String code, HttpServletRequest request) {
 		pageVisitService.logPageVisit("answer-page", request);
 		return "_answer.html";

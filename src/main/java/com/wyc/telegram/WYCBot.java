@@ -6,6 +6,8 @@ import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +16,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageReplyMarkup;
@@ -71,6 +72,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WYCBot extends TelegramLongPollingBot {
 	
+	private boolean disabled;
+	
 	private String botUsername, botToken;
 	
 	private PersonRepository personRepository;
@@ -89,6 +92,8 @@ public class WYCBot extends TelegramLongPollingBot {
 
 	private IncomingMessageRepository incomingMessageRepository;
 
+	private static final String FULL_MENU = "Меню";
+	private static final String SEND_MESSAGE_MENU = "Послать сообщение";
 
 	@Override
 	public void onUpdateReceived(Update update) {
@@ -97,15 +102,16 @@ public class WYCBot extends TelegramLongPollingBot {
 		if(update.getMessage() != null) {
 			Message msg = update.getMessage();
 			
+			/*
 			DeleteMessage deleteMessage = new DeleteMessage();
 			deleteMessage.setChatId(msg.getChatId().toString());
 			deleteMessage.setMessageId(msg.getMessageId());
 			try {
 				deleteMessage(deleteMessage);
 			} catch (TelegramApiException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
+			*/
 			
 			if(msg.getText() != null && msg.getText().equals("/start")) {
 				
@@ -135,6 +141,7 @@ public class WYCBot extends TelegramLongPollingBot {
 					sendMessage.setText("Вы уже зарегистрированы.");
 				}
 				
+				// sendMessage.setReplyMarkup(createMainMenu());
 				sendMessage.setChatId(msg.getChatId());
 				
 				sendMessage.setReplyToMessageId(msg.getMessageId());
@@ -148,23 +155,27 @@ public class WYCBot extends TelegramLongPollingBot {
 				} catch(TelegramApiException e) {
 					log.error("Error sending message " + sendMessage, e);
 				}
+				/*
 				try {
 					sendMessage = new SendMessage();
+					sendMessage.setText("Меню");
 					sendMessage.setChatId(msg.getChatId());
 					ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
 					List<KeyboardRow> keyboard = new ArrayList<>();
 					KeyboardRow row = new KeyboardRow();
-					KeyboardButton button = new KeyboardButton("/menu");
-					button.setRequestContact(true);
+					KeyboardButton button = new KeyboardButton(FULL_MENU);
 					row.add(button);
-					keyboard.add(row );
+					button = new KeyboardButton(SEND_MESSAGE_MENU);
+					row.add(button);
+					keyboard.add(row);
 					keyboardMarkup.setKeyboard(keyboard );
 					sendMessage.setReplyMarkup(keyboardMarkup);
-					sendMessage.setText("Menu");
+					// sendMessage.setText("Menu");
 					sendMessage(sendMessage);
 				} catch(TelegramApiException e) {
 					log.error("Error sending message " + sendMessage, e);
 				}
+				*/
 			} else {
 				processAnswer(msg);
 			}
@@ -280,7 +291,24 @@ public class WYCBot extends TelegramLongPollingBot {
 			Object bean = beans.get(name);
 			log.debug("  bot service " + name + " = " + bean);
 			Class<? extends Object> cls = bean.getClass();
-			for(Method m : cls.getMethods()) {
+			Method[] methods = cls.getMethods();
+			
+			List<Method> botMethods = new ArrayList<>(); 
+			for(Method m : methods) {
+				if(m.isAnnotationPresent(BotMethod.class)) {
+					botMethods.add(m);
+				}
+			}
+			Collections.sort(botMethods, new Comparator<Method>(){
+				@Override
+				public int compare(Method m1, Method m2) {
+					BotMethod a1 = m1.getAnnotation(BotMethod.class);
+					BotMethod a2 = m2.getAnnotation(BotMethod.class);
+					return a1.order() - a2.order();
+				}
+			});
+			
+			for(Method m : botMethods) {
 				if(m.isAnnotationPresent(BotMethod.class)) {
 					BotMethod a = m.getAnnotation(BotMethod.class);
 					
@@ -822,7 +850,8 @@ public class WYCBot extends TelegramLongPollingBot {
 				}
 				for(Person person : persons) {
 					SendMessage sendMessage = new SendMessage();
-					sendMessage.setChatId(person.getId().toString());
+					sendMessage.enableMarkdown(true);
+					sendMessage.setChatId(person.getTelegramId().toString());
 					String text = createMessageText(message);
 					sendMessage.setText(text);
 					
@@ -840,13 +869,13 @@ public class WYCBot extends TelegramLongPollingBot {
 					try {
 						Message sentMessage = sendMessage(sendMessage);
 						messageDelivery.setSentMessageId(sentMessage.getMessageId());
+						message.setDelivered(true);
+						driveMessageRepository.save(message);
 					} catch (TelegramApiException e) {
 						log.error("Error delivering message", e);
 						messageDelivery.setDeliveryException(e.toString());
 					}
 					driveMessageDeliveryRepository.save(messageDelivery);
-					message.setDelivered(true);
-					driveMessageRepository.save(message);
 				}
 			}
 		}
@@ -913,17 +942,31 @@ public class WYCBot extends TelegramLongPollingBot {
 					(message.getLocationTitle() == null ? "" : "\nМесто: " + message.getLocationTitle());
 		} else {
 			// Это ответ от незарегистрированного пользователя
-			res = res + "Вам пишет " + message.getRepliedTo().getCarNumberTo() + "\n" + message.getMessage();
+			res = res + "Вам пишет " + message.getRepliedTo().getCarNumberTo() + "\n*" + message.getMessage() +"*";
 		}
 		res = res + (message.getLocationTitle() == null ? "" : "\nМесто: " + message.getLocationTitle()) + "\n";
 
 		if(message.getRepliedTo() != null) {
-			res = res + "\n\nв ответ на ваше сообщение\n" + message.getRepliedTo().getMessage() + 
-					"\n от " + sdf.format(message.getRepliedTo().getCreationDate());
+			res = res + "\n\nв ответ на ваше сообщение от " + sdf.format(message.getRepliedTo().getCreationDate()) +  
+					"\n_" +message.getRepliedTo().getMessage() + "_" +
+					"\nМесто : " + message.getRepliedTo().getLocationTitle() +
+					"";
 			
 		}
 		
 		return res;
 	}
-	
+
+	private ReplyKeyboardMarkup createMainMenu() {
+		ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+		List<KeyboardRow> keyboard = new ArrayList<>();
+		KeyboardRow row = new KeyboardRow();
+		KeyboardButton button = new KeyboardButton(FULL_MENU);
+		row.add(button);
+		button = new KeyboardButton(SEND_MESSAGE_MENU);
+		row.add(button);
+		keyboard.add(row);
+		keyboardMarkup.setKeyboard(keyboard );
+		return keyboardMarkup;
+	}
 }

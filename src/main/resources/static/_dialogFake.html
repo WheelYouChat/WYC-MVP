@@ -3,16 +3,23 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
     <title>Создать диалог</title>
 
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-
     <!-- 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.js"></script>
-     -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+ 	-->
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.20.0/select.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.9/angular.js"></script>
+    <!-- 
     <script src="//code.angularjs.org/snapshot/angular.min.js"></script>
+     -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-sanitize/1.6.9/angular-sanitize.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.20.0/select.min.js"></script>
     
     <style>
     	.has-error {
@@ -26,6 +33,31 @@
     	.panel{
     		margin:40px;
     	}
+    </style>
+    <style>
+        body {
+            padding: 15px;
+        }
+
+        .select2 > .select2-choice.ui-select-match {
+            /* Because of the inclusion of Bootstrap */
+            height: 29px;
+        }
+
+        .selectize-control > .selectize-dropdown {
+            top: 36px;
+        }
+        /* Some additional styling to demonstrate that append-to-body helps achieve the proper z-index layering. */
+        .select-box {
+          background: #fff;
+          position: relative;
+          z-index: 1;
+        }
+        .alert-info.positioned {
+          margin-top: 1em;
+          position: relative;
+          z-index: 10000; /* The select2 dropdown has a z-index of 9999 */
+        }
     </style>
   </head>
 
@@ -55,12 +87,30 @@
 		  			<input type="text" name="cutterNumber" ng-model="cutter.number" placeholder="А000АА177" maxlength="9" >
 		  		</div>
 		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
-	 				<label class="col-sm-2 col-form-label" for="phone">Цвет</label>
-		  			<input type="text" name="cutterColor" ng-model="cutter.color" placeholder="Черный" maxlength="9" >
+	 				<label class="col-sm-2 col-form-label" for="phone">Марка</label>
+					<ui-select tagging tagging-label="('new')" ng-model="cutter.brand" theme="bootstrap" style2="width: 800px;" title="Марка автомобиля" class="col-sm-4">
+					    <ui-select-match placeholder="Марка автомобиля...">{{$select.selected}}</ui-select-match>
+					    <ui-select-choices repeat="brand in brands | filter: $select.search">
+					      <div ng-bind-html="brand | highlight: $select.search"></div>
+					    </ui-select-choices>
+					</ui-select>
+	 				<!-- 
+		  			<input type="text" name="cutterBrand" ng-model="cutter.brand" placeholder="БМВ" maxlength="9" >
+		  			-->
 		  		</div>
 		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
-	 				<label class="col-sm-2 col-form-label" for="phone">Марка</label>
-		  			<input type="text" name="cutterBrand" ng-model="cutter.brand" placeholder="БМВ" maxlength="9" >
+	 				<label class="col-sm-2 col-form-label" for="phone">Цвет</label>
+	 				<!-- 
+		  			<input type="text" name="cutterColor" ng-model="cutter.color" placeholder="Черный" maxlength="9" >
+		  			 -->
+						  			
+					<ui-select tagging tagging-label="('new')" ng-model="cutter.color" theme="bootstrap" style2="width: 800px;" title="Choose a person" class="col-sm-4">
+					    <ui-select-match placeholder="Цвет автомобиля...">{{$select.selected}}</ui-select-match>
+					    <ui-select-choices repeat="color in getColorsForBrands(cutter.brand, brandsWithSex, colors) | filter: $select.search">
+					      <div ng-bind-html="color | highlight: $select.search"></div>
+					    </ui-select-choices>
+					</ui-select>
+		  			
 		  		</div>
 	  		</div>
 	  		
@@ -71,12 +121,28 @@
 		  			<input type="text" name="cuttedNumber" ng-model="cutted.number" placeholder="А000АА177" maxlength="9" >
 		  		</div>
 		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
-	 				<label class="col-sm-2 col-form-label" for="phone">Цвет</label>
-		  			<input type="text" name="cuttedColor" ng-model="cutted.color" placeholder="красный" maxlength="9" >
+	 				<label class="col-sm-2 col-form-label" for="phone">Марка</label>
+					<ui-select tagging tagging-label="('new')" ng-model="cutted.brand" theme="bootstrap" style2="width: 800px;" title="Марка автомобиля" class="col-sm-4">
+					    <ui-select-match placeholder="Марка автомобиля...">{{$select.selected}}</ui-select-match>
+					    <ui-select-choices repeat="brand in brands | filter: $select.search">
+					      <div ng-bind-html="brand | highlight: $select.search"></div>
+					    </ui-select-choices>
+					</ui-select>
+	 				<!-- 
+		  			<input type="text" name="cuttedBrand" ng-model="cutted.brand" placeholder="Ниссан" maxlength="9" >
+		  			-->
 		  		</div>
 		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
-	 				<label class="col-sm-2 col-form-label" for="phone">Марка</label>
-		  			<input type="text" name="cuttedBrand" ng-model="cutted.brand" placeholder="Ниссан" maxlength="9" >
+	 				<label class="col-sm-2 col-form-label" for="phone">Цвет</label>
+	 				<!-- 
+		  			<input type="text" name="cuttedColor" ng-model="cutted.color" placeholder="красный" maxlength="9" >
+		  			-->
+					<ui-select tagging tagging-label="('new')" ng-model="cutted.color" theme="bootstrap" style2="width: 800px;" title="Choose a person" class="col-sm-4">
+					    <ui-select-match placeholder="Цвет автомобиля...">{{$select.selected}}</ui-select-match>
+					    <ui-select-choices repeat="color in getColorsForBrands(cutted.brand, brandsWithSex, colors) | filter: $select.search">
+					      <div ng-bind-html="color | highlight: $select.search"></div>
+					    </ui-select-choices>
+					</ui-select>
 		  		</div>
 	  		</div>
 	  		<div>
@@ -123,10 +189,95 @@
 </html>
 
 <script type="text/javascript">
-var app = angular.module("dialogApp", []); 
+var app = angular.module("dialogApp", ['ngSanitize', 'ui.select']); 
 app.controller("dialogCtrl", function($scope, $http) {
+	var MALE = 0, FEMALE = 1;
+	$scope.colors = [ 
+	                 ["белый", "белая"],
+	                 ["черный", "черная"],
+	                 ["серебристый", "серебристая"],
+	                 ["красный", "красная"],
+	                 ["синий", "синяя"],
+	                 ["бежевый", "бежевая"],
+	                 ["серый", "серая"],
+	                 ["голубой", "голубая"],
+	                 ["зеленый", "зеленая"],
+	                 ["желтый", "желтая"],
+	                 ["коричневый", "коричневая"],
+	                 ["оранжевый", "оранжевая"],
+	                 ["фиолетовый", "фиолетовая"],
+	                 ];
+	$scope.brandsWithSex = [
+	                 ["Audi", FEMALE],  
+	                 ["Mercedez"],
+	                 ["Volkswagen"],
+	                 ["Opel"],
+	                 ["Porsche"],
+	                 ["Skoda", FEMALE],
+	                 ["BMV"],
+	                 ["Smart"],
+
+	                 ["Citroen"],
+	                 ["Peugeout"],
+	                 ["Renault"],
+
+	                 ["Ford"],
+	                 ["Chevrolet"],
+	                 ["Jeep"],
+	                 ["Chrysler"],
+	                 ["Cadillac‎"],
+	                 ["Hummer"],
+	                 ["Dodge"],
+	                 ["Land Rover"],
+	                 ["Range Rover"],
+
+	                 ["Volvo"],
+	                 ["SAAB"],
+	                 ["Mini Cooper"],
+
+	                 ["KIA", FEMALE],
+	                 ["Hyundai"],
+	                 ["Daewoo"],
+
+	                 ["Lada", FEMALE],
+	                 ["Жигули"],
+	                 ["Москвич"],
+	                 ["Волга", FEMALE],
+	                 ["УАЗ Patriot"],
+
+	                 ["Alfa Romeo", FEMALE],
+	                 ["Fiat"],
+
+	                 ["BYD"],
+	                 ["Cherry", FEMALE],
+	                 ["Geely"],
+	                 ["Great Wall"],
+	                 ["Lifan"],
+
+	                 ["Maybach"],
+	                 ["Bentley"],
+	                 ["Ferrari"],
+	                 ["Maserati"],
+	                 ["Jaguar"],
+	                 ["Lamborghini‎", FEMALE],
+
+	                 ["Toyota", FEMALE],
+	                 ["Lexus"],
+	                 ["Subaru", FEMALE],
+	                 ["Nissan"],
+	                 ["Mitsubishi"],
+	                 ["Infinity"],
+	                 ["Mazda", FEMALE],
+	                 ["Honda", FEMALE],
+	                 ["Suzuki"],
+	                 ["Seat"],
+	                 
+	                 ];
+	
+	$scope.brands = getOnlyBrands($scope.brandsWithSex);
 	$scope.cutter = {};
 	$scope.cutted = {};
+	$scope.getColorsForBrands = getColorsForBrands;
     $scope.makeDialog = function() {
     	$http.post('/makeDialogFaakkee', 
     			{
@@ -146,7 +297,7 @@ app.controller("dialogCtrl", function($scope, $http) {
     }
     
     function loadDialogs() {
-	    $http.get("/dialogs").then(function(data){
+	    $http.get("/dialogs?max=30").then(function(data){
 	    	console.log(data);
 	    	$scope.dialogs = data.data;
 	    	if($scope.dialogs.length > 0) {
@@ -158,4 +309,23 @@ app.controller("dialogCtrl", function($scope, $http) {
     
     loadDialogs();
 });
+
+function getColorsForBrands(selectedBrand, brandsWithSex, colors) {
+	var brandWithSex = brandsWithSex.filter((b) => b[0] == selectedBrand);
+	if(brandWithSex.length > 0) {
+		var sexIdx = 0;
+		if(brandWithSex[0].length >= 2) {
+			sexIdx = brandWithSex[0][1];
+		}
+		var res = colors.map((b) => b[sexIdx]);
+		return res;	
+	}
+	return [];
+	
+}
+
+function getOnlyBrands(brandsWithSex) {
+	var res = brandsWithSex.map((b) => b[0]);
+	return res;	
+}
 </script>

@@ -1,0 +1,134 @@
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../../../favicon.ico">
+
+    <title>Вам пришло сообщение</title>
+
+    <!-- Bootstrap core CSS -->
+    <!-- 
+    <link href="../../../../dist/css/bootstrap.min.css" rel="stylesheet">
+    -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- Custom styles for this template -->
+    <link href="https://getbootstrap.com/docs/4.0/examples/sign-in/signin.css" rel="stylesheet">
+    
+    <!-- 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.js"></script>
+     -->
+    <script src="//code.angularjs.org/snapshot/angular.min.js"></script>
+    
+    <style>
+    	.has-error {
+    		color:red;
+    	}
+    	
+    	.has-error input {
+    		border-color:red;
+    	}
+    </style>
+  </head>
+
+  <body class="text-center">
+  	<div class="container"  ng-app="answerApp" ng-controller="answerCtrl">
+  		<div ng-show="message" class="text-center">
+	  		<h3>Сообщение для автомобиля {{message.carNumberTo}}</h3> 
+	  		<div>от {{message.from.userDesc}}</div>
+	  		<div>{{message.message}}</div>
+	  		<div>Место: {{message.locationTitle}}</div>
+	  		<div>Время: {{message.creationDate | date : 'dd-MM-yy HH:mm'}}</div>
+	  		<img ng-src="https://static-maps.yandex.ru/1.x/?ll={{message.longitude}},{{message.latitude}}&pt={{message.longitude}},{{message.latitude}},pmwtl&l=map&z=14&size={{mapWidth}},{{mapHeight}}"
+	  		width="{{mapWidth}}" height="{{mapHeight}}" alt="Место, где все произошло"/>
+	  		
+	  		<div ng-show="message.answer == null && message.messageType.answers.length > 0">
+		  		<h4>Вы можете ответить</h4>
+		  		<div class="text-left" ng-class="{'has-error' : error.fieldName=='phone'}">
+  					<label for="phone">Последние 4 цифры вашего телефона</label>
+		  			<input type="text" name="phone" ng-model="phone" placeholder="0000" maxlength="4" >
+		  		</div>
+		  		<div class="text-left" ng-repeat="option in message.messageType.answers" >
+	  				<input type="radio" name="answer" ng-model="formData.answer" ng-value="option" id="option-{{option.name}}">
+  					<label for="option-{{option.name}}">{{option.title}}</label>
+		  		</div>
+		  		<div ng-show="error" class="text-danger">
+		  			{{error.message}}
+		  		</div>
+		  		<div>
+		  			<button class="btn btn-info btn-large" ng-disabled="hasError() || submitting" ng-click="submit()">Ответить</button>
+		  		</div>
+		  	
+	  		</div>
+	  		<div ng-show="message.answer != null">
+	  			Вы ответили {{message.answer.message}}
+	  		</div>
+	  		 
+  		</div>
+	  	<div style="padding-top:50px;">
+	  		Подключайтесь к нам и вы сможете посылать сообщения другим водителям по номеру автомобиля
+	  	</div>
+  	</div>
+  </body>
+</html>
+
+<script type="text/javascript">
+var app = angular.module("answerApp", []); 
+app.controller("answerCtrl", function($scope, $http) {
+	var path = location.pathname;
+	var idx = path.lastIndexOf('/');
+	var code = path.substring(idx + 1);
+    $http.get('/api/messages/' + code).then(function(data){
+    	console.log(data);
+    	$scope.message = data.data;
+    });
+    var mapWidth = window.innerWidth;
+    mapWidth = mapWidth > 400 ? 400 : mapWidth;
+    $scope.mapWidth = mapWidth;
+    $scope.mapHeight = mapWidth;
+    $scope.formData = {answer:null};
+    
+    $scope.submit = function() {
+		$scope.error = null;
+    	$scope.submitting = true;
+    	$http.post('/api/answer', 
+    			{
+    				code : code,
+    				phone : $scope.phone,
+    				answer : $scope.formData.answer.name
+    			})
+    	.then(function(data){
+        	$scope.submitting = false;
+        	$scope.answered = true;
+        	$scope.message.answer = data.data;
+    	}, function(error) {
+    		console.log(error);
+    		if(error.data.message) {
+    			$scope.error = error.data;
+    		}
+    	});
+    }
+    
+    $scope.hasError = function() {
+    	var errorText = $scope.validate();
+    	return errorText != null;
+    }
+    
+    $scope.validate = function() {
+    	if(!$scope.formData.answer) {
+    		return 'Не выбран вариант ответа';
+    	}
+    	if(!$scope.phone) {
+    		return 'Введите последние 4 цифры телефона';
+    	}
+    	if($scope.phone.trim().length != 4) {
+    		return 'Введите 4 цифры телефона';
+    	}
+    	return null;
+    }
+});
+</script>

@@ -1,24 +1,18 @@
 package com.wyc.controller;
 
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-import com.wyc.annotation.BotService;
-
-@RestController
-@RequestMapping("/api")
+@Controller
 public class ApplicationController {
 
 	@Autowired
 	private ApplicationContext applicationContext;
 
-	@RequestMapping("/test")
-	public String test() {
-		Map<String, Object> beans = applicationContext.getBeansWithAnnotation(BotService.class);
-		return "hello " + beans;
+	@RequestMapping("/")
+	public String index() {
+		return "_index.html";
 	}
 }

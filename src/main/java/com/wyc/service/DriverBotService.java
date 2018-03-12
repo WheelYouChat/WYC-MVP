@@ -4,7 +4,6 @@ import java.util.Date;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.api.objects.Contact;
 import org.telegram.telegrambots.api.objects.Location;
@@ -30,6 +29,7 @@ import com.wyc.db.repository.CarRepository;
 import com.wyc.db.repository.DriveMessageDeliveryRepository;
 import com.wyc.db.repository.DriveMessageRepository;
 import com.wyc.db.repository.PersonRepository;
+import com.wyc.exception.ResourceNotFoundException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,7 +74,7 @@ public class DriverBotService {
 	}
 	*/
 	
-	@BotMethod(title="Послать сообщение другому водителю.", successMessage="Ваше сообщение будет отослано.")
+	@BotMethod(title="Послать сообщение другому водителю.", successMessage="Ваше сообщение будет отослано.", order = -1000)
 	public void sendMessage(@BotMethodParam(title="Номер автомобиля (кому хотите послать сообщение)", validators=PlateValidator.class) String number, 
 			// @BotMethodParam(title="Введите сообщение") String message,
 			@BotMethodParam(title="Введите сообщение") DriveMessageType messageType,
@@ -97,7 +97,7 @@ public class DriverBotService {
 		
 	}
 	
-	@BotMethod(title="lihachat.ru", url="http://www.lihachat.ru")
+	@BotMethod(title="lihachat.ru", url="http://www.lihachat.ru", order = 1000)
 	public void webSite() {
 		
 	}
