@@ -48,8 +48,11 @@ public class DriveMessage {
 		CUT_OFF            ("Вы меня подрезали",         "Вы меня подрезали", SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
 		CUT_OFF_SORRY      ("Извините,что подрезал",     "Извините, что подрезал", APOLOGY_ACCEPTED, APOLOGY_ACCEPTED_BUT_IT_WAS_DANGEROUS, I_WAS_NOT_THERE),
 		THANKS_GIVE_WAY    ("Спасибо,за проезд",         "Спасибо, что уступили дорогу", PLEASE, I_WAS_NOT_THERE),
-		DID_NOT_GIVE_WAY   ("Вы мне не уступили",        "Вы не уступили", SORRY, SORRY_HURRY, I_DONT_HAVE_TO_GIVE_WAY, I_WAS_NOT_THERE),
-		WRONG_PARKING      ("Вы плохо припаркованы",     "Ваша машина неправильно припаркована", SORRY, SORRY_HURRY, CAR_IS_NOT_THERE);
+		DANGEROUS_DRIVING  ("Вы опасно ехали",           "Вы создавали опасные ситуации на дороге для других водителей", SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
+		BROKE_RULES        ("Вы нарушили ПДД",           "Вы нарушили правила дорожного движения", SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
+		DID_NOT_GIVE_WAY   ("Вы не уступили дорогу",     "Вы мне не уступили дорогу", SORRY, SORRY_HURRY, I_DONT_HAVE_TO_GIVE_WAY, I_WAS_NOT_THERE),
+		WRONG_PARKING      ("Вы плохо припаркованы",     "Ваша машина неправильно припаркована", SORRY, SORRY_HURRY, CAR_IS_NOT_THERE),
+		BLOCK_PARKING      ("Вы меня блокировали",       "Ваша машина заблокировала мне выезд", SORRY, SORRY_HURRY, CAR_IS_NOT_THERE);
                                       
 		DriveMessageType(String text) {
 			this(text, text, new DriveMessageType[]{}, true);
