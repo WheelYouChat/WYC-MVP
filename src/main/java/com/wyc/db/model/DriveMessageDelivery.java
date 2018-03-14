@@ -13,6 +13,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import com.wyc.sms.sender.SMSDeliveryStatusProvider.DeliveryStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -58,6 +60,11 @@ public class DriveMessageDelivery {
 	
 	@Enumerated(EnumType.STRING)
 	private DeliveryType deliveryType;
+	
+	@Enumerated(EnumType.STRING)
+	private DeliveryStatus deliveryStatus;
+	
+	private boolean completed;
 
 	private String code;
 	

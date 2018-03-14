@@ -29,6 +29,8 @@ import com.wyc.db.repository.PersonContextRepository;
 import com.wyc.db.repository.PersonRepository;
 import com.wyc.service.CodeGenerator;
 import com.wyc.service.SMSMessageGenerator;
+import com.wyc.sms.sender.SMSDeliveryStatusProvider;
+import com.wyc.sms.sender.SMSDeliveryStatusProvider.DeliveryStatus;
 import com.wyc.sms.sender.SMSSender;
 
 import lombok.extern.slf4j.Slf4j;
@@ -103,6 +105,7 @@ public class WYCBotScheduledTask {
 		if(wycConfig.getBot() != null && !wycConfig.getBot().isDisabled()) {
 			wycBot.deliveryMessages();
 			deliverySmsMessages();
+			checkSMSDeliveryStatus();
 		}
 	}
 	
@@ -163,6 +166,23 @@ public class WYCBotScheduledTask {
 			}
 		}
 		
+	}
+	
+	// Проверка статусов СМС сообщений (доставлено или не доставлено)
+	protected void checkSMSDeliveryStatus() {
+		if(smsSender instanceof SMSDeliveryStatusProvider) {
+			SMSDeliveryStatusProvider statusProvider = (SMSDeliveryStatusProvider) smsSender;
+			List<DriveMessageDelivery> messages = driveMessageDeliveryRepository.findByCompletedAndDeliveryType(false, DeliveryType.SMS);
+			for(DriveMessageDelivery message : messages) {
+				DeliveryStatus status = statusProvider.getStatus(message);
+				message.setDeliveryStatus(status);
+				message.setCompleted(status.isCompleted());
+				if(status == DeliveryStatus.DELIVERED) {
+					message.setDeliveredDate(new Date());
+				}
+				driveMessageDeliveryRepository.save(message);
+			}
+		}
 	}
 
 	/**
