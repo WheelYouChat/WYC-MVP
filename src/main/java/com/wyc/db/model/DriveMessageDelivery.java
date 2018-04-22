@@ -32,7 +32,8 @@ public class DriveMessageDelivery {
 	
 	public static enum DeliveryType {
 		SMS,
-		TELEGRAM
+		TELEGRAM,
+		VIBER
 	}
 	
 	@Id
@@ -56,7 +57,7 @@ public class DriveMessageDelivery {
 	
 	private String deliveryException;
 	
-	private Integer sentMessageId;
+	private String sentMessageId;
 	
 	@Enumerated(EnumType.STRING)
 	private DeliveryType deliveryType;

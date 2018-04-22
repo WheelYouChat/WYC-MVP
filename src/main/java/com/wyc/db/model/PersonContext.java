@@ -27,6 +27,8 @@ public class PersonContext {
 	
 	private Date creationDate;
 	
+	private Date lastActivityDate;
+	
 	@OneToMany(fetch=FetchType.EAGER)
 	private List<ContextItem> items; 
 	

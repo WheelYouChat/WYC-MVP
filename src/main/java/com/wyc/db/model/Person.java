@@ -33,6 +33,8 @@ public class Person {
 
 	private Integer telegramId;
 	
+	private String viberId;
+	
 	private String carNumber;
 
 	private String userName;
@@ -44,6 +46,8 @@ public class Person {
 	private String lastName;
 
 	private String languageCode;
+	
+	private String avatar;
 	
 	private Date registrationDate;
 	

@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
     <!-- Custom styles for this template -->
-    <link href="https://getbootstrap.com/docs/4.0/examples/sign-in/signin.css" rel="stylesheet">
+    <link href="https://getbootstrap.com/docs/4.0/examples/sign-in/signin2.css" rel="stylesheet">
     
     <!-- 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.js"></script>
@@ -35,10 +35,37 @@
     </style>
   </head>
 
-  <body class="text-center">
+  <body class="text-center2">
   	<div class="container"  ng-app="answerApp" ng-controller="answerCtrl">
+  		
   		<div ng-show="message" class="text-center">
-	  		<h3>Сообщение для автомобиля {{message.carNumberTo}}</h3> 
+	  		<div class="card text-center" style="width:{{mapWidth}}px;">
+	  			<div class="card-header">
+	    			Сообщение для автомобиля
+	    			{{message.carNumberTo}}
+	  			</div>
+				<div class="card-body">
+					<h5 class="card-title">Special title treatment</h5>
+					<p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+					<a href="#" class="btn btn-primary">Go somewhere</a>
+	
+	  			</div>
+				<a href="https://maps.yandex.ru/?ll={{message.longitude}},{{message.latitude}}&pt={{message.longitude}},{{message.latitude}},pmwtl&l=map&z=14">
+					<img class="card-img-top" ng-src="https://static-maps.yandex.ru/1.x/?ll={{message.longitude}},{{message.latitude}}&pt={{message.longitude}},{{message.latitude}},pmwtl&l=map&z=14&size={{mapWidth}},{{mapHeight}}"
+	  					width="{{mapWidth}}" height="{{mapHeight}}" alt="Место, где все произошло"/>
+				</a>				
+	  		</div>
+
+	  		<h3>
+	  			Сообщение для автомобиля {{message.carNumberTo}} 
+	  		</h3>
+	  		<div style="position:relative;width:600px;"> 
+		    	<img src="/images/icons/car-front-driver.svg" width="300px">
+		    	<img src="/images/icons/baloon.svg" style="position:absolute;left: 0; right: 0; margin-left: auto; margin-right: auto; width: 100px; top:10px;">
+		    	<img src="/images/icons/car-front.svg" width="300px">
+		    	<!--  <img src="http://bestsmileys.ru/ng/X256KTR79.gif" style="position:absolute;left: 0; right: 0; margin-left: auto; margin-right: auto; width: 100px; top:150px;"> -->
+		    	<img ng-src="{{convertNumberToUrl(message.carNumberTo)}}" style="position:absolute;left: 0; right: 0; margin-left: auto; margin-right: auto; width: 100px; top:410px;">
+		    </div>
 	  		<div>от {{message.from.userDesc}}</div>
 	  		<div>{{message.message}}</div>
 	  		<div>Место: {{message.locationTitle}}</div>
@@ -129,6 +156,43 @@ app.controller("answerCtrl", function($scope, $http) {
     		return 'Введите 4 цифры телефона';
     	}
     	return null;
+    }
+    
+    $scope.convertNumberToUrl = function(s) {
+    	if(s && s.length > 0) {
+    		var cs = convertNumberForTranslit(s);
+    		cs = cs.replace(/([0-9]+)$/g, 'R$1.gif');
+    		return 'http://bestsmileys.ru/ng/' + cs;
+    	}
+    }
+    
+    function convertNumberForTranslit(s) {
+    	var map = {
+    		'У':'Y',
+    		'К':'K',
+    		'Е':'E',
+    		'Н':'H',
+    		'Х':'X',
+    		'В':'B',
+    		'А':'A',
+    		'Р':'P',
+    		'О':'O',
+    		'С':'C',
+    		'М':'M',
+    		'Т':'T',
+    	}
+    	var answer = '';
+    	for (i in s){
+
+    		var c = map[s[i]];
+            if(c) {
+                answer += c;
+            } else {
+                answer += s[i];
+            }
+
+        }
+        return answer;
     }
 });
 </script>

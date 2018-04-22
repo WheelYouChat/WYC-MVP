@@ -29,7 +29,7 @@ public class ContextItem {
 
 	private String contactPhoneNumber;
 
-	private Integer contactUserId;
+	private String contactUserId;
 	
 	private int idx;
 	

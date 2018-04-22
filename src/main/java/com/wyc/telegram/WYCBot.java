@@ -6,8 +6,6 @@ import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.util.Pair;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageReplyMarkup;
@@ -35,6 +34,7 @@ import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
+import com.wyc.MethodDesc;
 import com.wyc.annotation.BotMethod;
 import com.wyc.annotation.BotMethodParam;
 import com.wyc.annotation.BotService;
@@ -60,9 +60,9 @@ import com.wyc.db.repository.DriveMessageRepository;
 import com.wyc.db.repository.IncomingMessageRepository;
 import com.wyc.db.repository.PersonContextRepository;
 import com.wyc.db.repository.PersonRepository;
+import com.wyc.service.AnswerService;
+import com.wyc.service.MenuService;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -91,6 +91,10 @@ public class WYCBot extends TelegramLongPollingBot {
 	private DriveMessageDeliveryRepository driveMessageDeliveryRepository;
 
 	private IncomingMessageRepository incomingMessageRepository;
+	
+	private MenuService menuService;
+	
+	private AnswerService answerService;
 
 	private static final String FULL_MENU = "Меню";
 	private static final String SEND_MESSAGE_MENU = "Послать сообщение";
@@ -187,13 +191,13 @@ public class WYCBot extends TelegramLongPollingBot {
 			User from = callback.getFrom();
 			Person user = getPerson(from);
 			String data = callback.getData();
-			if(isEnum(data)) {
+			if(answerService.isEnum(data)) {
 				String enumValue = data.substring(1);
 				processAnswer(enumValue, null, null, from.getId().toString(), callback.getMessage().getMessageId(), callback.getInlineMessageId(), from);
-			} else if(isMethod(data)) {
+			} else if(answerService.isMethod(data)) {
 				String methodId = data;
 				
-				findMethod(methodId).ifPresent((bm) -> {
+				answerService.findMethod(methodId).ifPresent((bm) -> {
 					// Remove previous context
 					Optional<PersonContext> personContextOptional = personContextRepository.findByPersonId(user.getId());
 					personContextOptional.ifPresent(pc -> {
@@ -255,7 +259,7 @@ public class WYCBot extends TelegramLongPollingBot {
 				message.setContactFirstName(contact.getFirstName());
 				message.setContactLastName(contact.getLastName());
 				message.setContactPhoneNumber(contact.getPhoneNumber());
-				message.setContactUserId(contact.getUserID());
+				message.setContactUserId(contact.getUserID().toString());
 			}
 		}
 		if(senderId == null && update.getCallbackQuery() != null && update.getCallbackQuery().getFrom() != null) {
@@ -265,64 +269,35 @@ public class WYCBot extends TelegramLongPollingBot {
 		}
 				 
 		if(senderId != null) {
-			message.setSenderId(senderId);
+			message.setSenderId(senderId.toString());
 			message.setCreationDate(new Date());
 			incomingMessageRepository.save(message);
 		}
 	}
 
-	private boolean isEnum(String data) {
-		return data.startsWith("-");
-	}
-	
-	private boolean isMethod(String data) {
-		return parseMthodId(data).length >= 2;
-	}
-	
 	private InlineKeyboardMarkup createMenu() {
-		Map<String, Object> beans = applicationContext.getBeansWithAnnotation(BotService.class);
-
 		InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 		List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
 		inlineKeyboardMarkup.setKeyboard(keyboard);
-
-		log.debug("Start response. Scan services");
-		for(String name : beans.keySet()) {
-			Object bean = beans.get(name);
-			log.debug("  bot service " + name + " = " + bean);
-			Class<? extends Object> cls = bean.getClass();
-			Method[] methods = cls.getMethods();
 			
-			List<Method> botMethods = new ArrayList<>(); 
-			for(Method m : methods) {
-				if(m.isAnnotationPresent(BotMethod.class)) {
-					botMethods.add(m);
+		List<Pair<String, Method>> botMethods = menuService.getMenuMethods(); 
+		
+		for(Pair<String, Method> p : botMethods) {
+			String name = p.getFirst();
+			Method m = p.getSecond();
+			if(m.isAnnotationPresent(BotMethod.class)) {
+				BotMethod a = m.getAnnotation(BotMethod.class);
+				
+				List<InlineKeyboardButton> row = new ArrayList<>();
+				InlineKeyboardButton button = new InlineKeyboardButton(a.title());
+				button.setCallbackData(name + "." + m.getName());
+				
+				if(a.url() != null && a.url().length() > 0) {
+					button.setUrl(a.url());
 				}
-			}
-			Collections.sort(botMethods, new Comparator<Method>(){
-				@Override
-				public int compare(Method m1, Method m2) {
-					BotMethod a1 = m1.getAnnotation(BotMethod.class);
-					BotMethod a2 = m2.getAnnotation(BotMethod.class);
-					return a1.order() - a2.order();
-				}
-			});
-			
-			for(Method m : botMethods) {
-				if(m.isAnnotationPresent(BotMethod.class)) {
-					BotMethod a = m.getAnnotation(BotMethod.class);
-					
-					List<InlineKeyboardButton> row = new ArrayList<>();
-					InlineKeyboardButton button = new InlineKeyboardButton(a.title());
-					button.setCallbackData(name + "." + m.getName());
-					
-					if(a.url() != null && a.url().length() > 0) {
-						button.setUrl(a.url());
-					}
-					
-					row.add(button);
-					keyboard.add(row);
-				}
+				
+				row.add(button);
+				keyboard.add(row);
 			}
 		}
 		return inlineKeyboardMarkup;
@@ -338,7 +313,7 @@ public class WYCBot extends TelegramLongPollingBot {
 		Optional<PersonContext> pcOpt = getPersonContext(from);
 		pcOpt.ifPresent(pc -> {
 			
-			Optional<MethodDesc> methodOpt = findMethod(pc.getMethod());
+			Optional<MethodDesc> methodOpt = answerService.findMethod(pc.getMethod());
 			methodOpt.ifPresent(bm -> {
 				Method method = bm.getMethod();
 				int idx = getNextQuestionIdx(pc, method);
@@ -374,7 +349,7 @@ public class WYCBot extends TelegramLongPollingBot {
 								.contactFirstName(contact == null ? null : contact.getFirstName())
 								.contactLastName(contact == null ? null : contact.getLastName())
 								.contactPhoneNumber(contact == null ? null : contact.getPhoneNumber())
-								.contactUserId(contact == null ? null : contact.getUserID())
+								.contactUserId(contact == null ? null : contact.getUserID().toString())
 								.creationDate(new Date())
 								.build();
 						contextItemRepository.save(contextItem);
@@ -488,6 +463,7 @@ public class WYCBot extends TelegramLongPollingBot {
 		}
 		return res;
 	}
+
 	private void invoke(Object bean, PersonContext personContext, Method method, Integer replayToMessageId) {
 		
 		Object[] args = new Object[method.getParameterCount()];
@@ -518,7 +494,7 @@ public class WYCBot extends TelegramLongPollingBot {
 
 					@Override
 					public Integer getUserID() {
-						return item.getContactUserId();
+						return Integer.parseInt(item.getContactUserId());
 					}
 				};
 				
@@ -561,7 +537,14 @@ public class WYCBot extends TelegramLongPollingBot {
 					@Override
 					public Float getLatitude() {
 						return Float.parseFloat(parts[1]);
+					}	private boolean isEnum(String data) {
+						return data.startsWith("-");
 					}
+					
+					private boolean isMethod(String data) {
+						return answerService.parseMethodId(data).length >= 2;
+					}
+
 					
 				};
 				args[item.getIdx()] = location;
@@ -641,7 +624,7 @@ public class WYCBot extends TelegramLongPollingBot {
 	private PersonContext prepareContext(PersonContext personContext, Method method, String methodId, Integer replyMessageId) {
 		personContext.setItems(new ArrayList<>());
 
-		String[] parts = parseMthodId(methodId);
+		String[] parts = answerService.parseMethodId(methodId);
 		for(int i = 2; i < parts.length; i++) {
 			String value = parts[i];
 			ContextItem ci = ContextItem.builder()
@@ -789,49 +772,12 @@ public class WYCBot extends TelegramLongPollingBot {
 	private Optional<PersonContext> getPersonContext(User from) {
 		return personContextRepository.findByPersonTelegramId(from.getId());
 	}
-
-	@Builder
-	@AllArgsConstructor
-	@Getter
-	public static class MethodDesc {
-		private String beanName;
-		private Object bean;
-		private Method method;
-		private String args[];
-	}
-
-	private String[] parseMthodId(String methodId) {
-		return methodId.split("[.]");
-	}
-
-	private Optional<MethodDesc> findMethod(String methodId) {
-		Optional<MethodDesc> res = Optional.<MethodDesc>empty();
-		String[] parts = parseMthodId(methodId);
-		if(parts.length >= 2) {
-			Map<String, Object> beans = applicationContext.getBeansWithAnnotation(BotService.class);
-			Object bean = beans.get(parts[0]);
-			Optional<Method> mOpt = Arrays.stream(bean.getClass().getMethods()).filter(m -> m.getName().equals(parts[1])).findFirst();
-			if(mOpt.isPresent()) {
-				// res = Optional.<Pair<Object, Method>>of(Pair.<Object, Method>of(bean, mOpt.get()));
-				String args[] = new String[parts.length - 2];
-				for(int i = 2; i< parts.length; i++) {
-					args[i - 2] = parts[i];
-				}
-				res = Optional.<MethodDesc>of(MethodDesc.builder()
-						.bean(bean)
-						.method(mOpt.get())
-						.args(args)
-						.build());
-				
-			}
-		}
-		return res;
-	}
 	
 	public void deliveryMessages() {
 		Iterable<DriveMessage> messages = driveMessageRepository.findByDeliveredIsFalseOrderByIdDesc();
 		for(DriveMessage message : messages) {
-			if(message.getTo() != null && message.getTo().getTelegramId() != null && (message.getLongitude() == null || message.getLocationTitle() != null)) {
+			// if(message.getTo() != null && message.getTo().getTelegramId() != null && (message.getLongitude() == null || message.getLocationTitle() != null)) { // Странное условие- чтобы to было заполнено, закомментировал 31.03.18
+			if(message.getLongitude() == null || message.getLocationTitle() != null) {
 				List<Person> persons = new ArrayList();
 				String carNumber = message.getCarNumberTo();
 				
@@ -849,33 +795,35 @@ public class WYCBot extends TelegramLongPollingBot {
 					persons.add(message.getTo());
 				}
 				for(Person person : persons) {
-					SendMessage sendMessage = new SendMessage();
-					sendMessage.enableMarkdown(true);
-					sendMessage.setChatId(person.getTelegramId().toString());
-					String text = createMessageText(message);
-					sendMessage.setText(text);
-					
-					ReplyKeyboard replyMarkup = createReplyButtons(message.getMessageType());
-					if(replyMarkup != null) {
-						sendMessage.setReplyMarkup(replyMarkup);
+					if(person.getTelegramId() != null) {
+						SendMessage sendMessage = new SendMessage();
+						sendMessage.enableMarkdown(true);
+						sendMessage.setChatId(person.getTelegramId().toString());
+						String text = createMessageText(message);
+						sendMessage.setText(text);
+						
+						ReplyKeyboard replyMarkup = createReplyButtons(message.getMessageType());
+						if(replyMarkup != null) {
+							sendMessage.setReplyMarkup(replyMarkup);
+						}
+	
+						DriveMessageDelivery messageDelivery = DriveMessageDelivery.builder()
+								.deliveredDate(new Date())
+								.deliveryType(DeliveryType.TELEGRAM)
+								.to(person)
+								.driveMessage(message)
+								.build();
+						try {
+							Message sentMessage = sendMessage(sendMessage);
+							messageDelivery.setSentMessageId(sentMessage.getMessageId().toString());
+							message.setDelivered(true);
+							driveMessageRepository.save(message);
+						} catch (TelegramApiException e) {
+							log.error("Error delivering message", e);
+							messageDelivery.setDeliveryException(e.toString());
+						}
+						driveMessageDeliveryRepository.save(messageDelivery);
 					}
-
-					DriveMessageDelivery messageDelivery = DriveMessageDelivery.builder()
-							.deliveredDate(new Date())
-							.deliveryType(DeliveryType.TELEGRAM)
-							.to(person)
-							.driveMessage(message)
-							.build();
-					try {
-						Message sentMessage = sendMessage(sendMessage);
-						messageDelivery.setSentMessageId(sentMessage.getMessageId());
-						message.setDelivered(true);
-						driveMessageRepository.save(message);
-					} catch (TelegramApiException e) {
-						log.error("Error delivering message", e);
-						messageDelivery.setDeliveryException(e.toString());
-					}
-					driveMessageDeliveryRepository.save(messageDelivery);
 				}
 			}
 		}

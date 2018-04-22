@@ -14,4 +14,5 @@ public interface PersonRepository extends PagingAndSortingRepository<Person, Lon
 	List<Person> findByCarNumber(String carNumber);
 	List<Person> findByCarNumberOrIdIn(String carNumber, Collection<Integer> ids);
 	Optional<Person> findByTelegramId(int telegramId);
+	Optional<Person> findByViberId(String viberId);
 }

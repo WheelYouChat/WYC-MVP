@@ -6,9 +6,9 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.api.objects.Contact;
-import org.telegram.telegrambots.api.objects.Location;
 import org.telegram.telegrambots.api.objects.Message;
 
+import com.wyc.Location;
 import com.wyc.annotation.BotMethod;
 import com.wyc.annotation.BotMethodParam;
 import com.wyc.annotation.BotService;
@@ -50,13 +50,19 @@ public class DriverBotService {
 	@Autowired
 	private CarRepository carRepository;
 	
-	@BotMethod(title="Заполнить профиль (номер, ник, авто)")
+	@BotMethod(title="Заполнить профиль (номер, ник, авто)", mainMenu=true)
 	public String setNumber(
 			@BotMethodParam(title="Номер вашего автомобиля в формате А123АА99", validators=PlateValidator.class) String newNumber, 
 			@BotMethodParam(title="Ваш ник (например Лихач)", validators=NicknameValidator.class) String newNickname, 
 			@BotMethodParam(title="Описание вашего автомобиля (например Красная Феррари)", validators=CarNameValidator.class) String newCarName, 
 			@BotUser String currentUserId) {
-		Person person = personRepository.findByTelegramId(Integer.parseInt(currentUserId)).orElseThrow(() -> new ResourceNotFoundException("Can not find person by telegram id = '" + currentUserId + "'"));
+		
+		Person person;
+		try {
+			person = personRepository.findByTelegramId(Integer.parseInt(currentUserId)).orElseThrow(() -> new ResourceNotFoundException("Can not find person by telegram id = '" + currentUserId + "'"));
+		} catch (NumberFormatException e) {
+			person = personRepository.findByViberId(currentUserId).orElseThrow(() -> new ResourceNotFoundException("Can not find person by telegram id = '" + currentUserId + "'"));
+		}
 		newNumber = PlateValidator.processNumber(newNumber);
 		person.setCarNumber(newNumber);
 		person.setNickname(newNickname);
@@ -74,13 +80,15 @@ public class DriverBotService {
 	}
 	*/
 	
-	@BotMethod(title="Послать сообщение другому водителю.", successMessage="Ваше сообщение будет отослано.", order = -1000)
-	public void sendMessage(@BotMethodParam(title="Номер автомобиля (кому хотите послать сообщение)", validators=PlateValidator.class) String number, 
-			// @BotMethodParam(title="Введите сообщение") String message,
+	@BotMethod(title="Послать сообщение другому водителю", successMessage="Ваше сообщение будет отослано.", order = -1000, mainMenu=true)
+	public void sendMessage(
 			@BotMethodParam(title="Введите сообщение") DriveMessageType messageType,
+			
+			@BotMethodParam(title="Номер автомобиля (кому хотите послать сообщение)", validators=PlateValidator.class) String number, 
+			// @BotMethodParam(title="Введите сообщение") String message,
 			@BotMethodParam(title="Укажите место где произошло") Location location,
-			@BotUser Integer currentUserId) {
-		Person person = personRepository.findByTelegramId(currentUserId).orElseThrow(() -> new ResourceNotFoundException("Can not find person by telegram id = '" + currentUserId + "'"));
+			@BotUser String currentUserId) {
+		Person person = personRepository.findByViberId(currentUserId).orElseThrow(() -> new ResourceNotFoundException("Can not find person by telegram id = '" + currentUserId + "'"));
 		// person.setCarNumber(newNumber);
 		number = PlateValidator.processNumber(number);
 		DriveMessage driveMessage = DriveMessage.builder()
@@ -97,7 +105,7 @@ public class DriverBotService {
 		
 	}
 	
-	@BotMethod(title="lihachat.ru", url="http://www.lihachat.ru", order = 1000)
+	@BotMethod(title="lihachat.ru", url="http://www.lihachat.ru", order = 1000, mainMenu=true)
 	public void webSite() {
 		
 	}
@@ -115,7 +123,7 @@ public class DriverBotService {
 	*/
 	
 	
-	@BotMethod(title="Сообщить номер телефона владельца.")
+	@BotMethod(title="Сообщить номер телефона владельца", mainMenu=true)
 	public String reportCarPhone(
 			@BotMethodParam(title="Номер автомобиля", validators=PlateValidator.class) String number,
 			@BotMethodParam(title="Контакт владельца (введите номер телефона или пришлите контакт из адресной книги)", validators=ContactValidator.class) Message contactInfo,
@@ -137,13 +145,17 @@ public class DriverBotService {
 					.ownerFirstName(contact.getFirstName())
 					.ownerLastName(contact.getLastName())
 					.ownerPhoneNumber(contact.getPhoneNumber())
-					.ownerUserId(contact.getUserID())
-					;
+					.ownerUserId(contact.getUserID());
 		}
 		Car car = builder.build();
 		carRepository.save(car);
 		return "Спасибо за предоставленную информацию";
 	}
+	
+	@BotMethod(title="Возврат в главное меню", backToMainMenu=true, cols=6)
+	public void backToMainMenu() {
+	}
+
 	
 	@ReplyBotMethod
 	public void reply(DriveMessageType messageType, @ReplyMessageId Integer replyMessageId, @BotUser String currentUserId) {

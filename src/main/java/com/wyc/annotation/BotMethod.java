@@ -12,4 +12,18 @@ public @interface BotMethod {
 	String url() default "";
 	String successMessage() default "ok";
 	int order() default 0;
+	int cols() default 3;
+	int rows() default 1;
+	
+	/**
+	 * Нужно ли показывать в главном меню
+	 * @return
+	 */
+	boolean mainMenu() default false;
+	
+	/**
+	 * Метод возврата в главное меню
+	 * @return
+	 */
+	boolean backToMainMenu() default false;
 }

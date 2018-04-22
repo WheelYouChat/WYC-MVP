@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import com.wyc.telegram.WYCBot;
+import com.wyc.viber.ViberBotConfig;
 
 import lombok.Data;
 
@@ -12,4 +13,5 @@ import lombok.Data;
 @Data
 public class WYCConfig {
 	private WYCBot bot;
+	private ViberBotConfig viber;
 }

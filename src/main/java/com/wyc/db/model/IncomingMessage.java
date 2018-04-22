@@ -2,10 +2,13 @@ package com.wyc.db.model;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+
+import com.wyc.Location;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class IncomingMessage {
+public class IncomingMessage implements Location{
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
@@ -25,9 +28,12 @@ public class IncomingMessage {
 
 	private Date creationDate;
 	
-	private Integer senderId;
+	private String senderId;
 	
 	private String text;
+	
+	@Column(columnDefinition="TEXT")
+	public String body;
 	
 	private String data;
 
@@ -37,9 +43,11 @@ public class IncomingMessage {
 
 	private String contactPhoneNumber;
 
-	private Integer contactUserId;
+	private String contactUserId;
 	
 	private Float longitude;
 	
 	private Float latitude;
+	
+	private String messageId;
 }

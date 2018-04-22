@@ -1,7 +1,7 @@
 buildscript {
   repositories {
     mavenCentral()
-    maven { url "https://plugins.gradle.org/m2/" }
+    maven { url "https://plugins.gradle.org/m2/"}
   }
   dependencies {
     classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.6.RELEASE")
@@ -71,6 +71,12 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.modelmapper/modelmapper
   compile group: 'org.modelmapper', name: 'modelmapper', version: '1.1.2'
+  
+  compile group: "com.twilio.sdk", name: "twilio", version: "7.17.+"
+  
+// https://mvnrepository.com/artifact/com.telesign/telesign
+  compile group: 'com.telesign', name: 'telesign', version: '2.2.0'
+  // compile 'com.telesign.rest:telesign:2.2.0'
   
   // https://mvnrepository.com/artifact/junit/junit
   testCompile group: 'junit', name: 'junit', version: '4.12'

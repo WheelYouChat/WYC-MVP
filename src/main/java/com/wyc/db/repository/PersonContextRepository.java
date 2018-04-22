@@ -1,5 +1,7 @@
 package com.wyc.db.repository;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -12,4 +14,5 @@ public interface PersonContextRepository extends PagingAndSortingRepository<Pers
 	Optional<PersonContext> findByPersonId(Long personId);
 	Optional<PersonContext> findByPersonTelegramId(Integer telegramId);
 	void removeByPersonId(Long personId);
+	List<PersonContext> findByLastActivityDateLessThan(Date lastActivityDate);
 }
