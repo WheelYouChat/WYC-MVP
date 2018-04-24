@@ -8,16 +8,28 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.wyc.avinfo.AVInfoService;
+import com.wyc.db.model.AVICar;
 import com.wyc.service.PageVisitService;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Controller
+@Slf4j
 public class AnswerController {
 	
 	@Autowired
 	private PageVisitService pageVisitService;
 	
+	@Autowired
+	private AVInfoService avinfoService;
+	
 	@RequestMapping(path="/{code:[A-Za-z0-9]{2,7}}", method=RequestMethod.GET)
 	public String answerPage(@PathVariable("code") String code, HttpServletRequest request) {
+		// AVICar car = avinfoService.getCar("К064ММ177");
+		// AVICar car = avinfoService.getCar("В881УЕ777");
+		// log.info("Car = " + car);
+		
 		pageVisitService.logPageVisit("answer-page", request);
 		return "_answer.html";
 	}

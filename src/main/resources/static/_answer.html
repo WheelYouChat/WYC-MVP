@@ -1,44 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
 
-<!doctype html>
-<html lang="ru">
   <head>
+
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="icon" href="../../../../favicon.ico">
 
-    <title>Вам пришло сообщение</title>
+    <title>ЛихаЧат-Сообщение</title>
 
     <!-- Bootstrap core CSS -->
-    <!-- 
-    <link href="../../../../dist/css/bootstrap.min.css" rel="stylesheet">
-    -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom fonts for this template -->
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+
+    <!-- Plugin CSS -->
+    <link href="vendor/magnific-popup/magnific-popup.css" rel="stylesheet" type="text/css">
 
     <!-- Custom styles for this template -->
-    <link href="https://getbootstrap.com/docs/4.0/examples/sign-in/signin2.css" rel="stylesheet">
-    
-    <!-- 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.js"></script>
-     -->
+    <link href="css/freelancer.css" rel="stylesheet">
     <script src="//code.angularjs.org/snapshot/angular.min.js"></script>
     
-    <style>
-    	.has-error {
-    		color:red;
-    	}
-    	
-    	.has-error input {
-    		border-color:red;
-    	}
-    </style>
   </head>
 
-  <body class="text-center2">
-  	<div class="container"  ng-app="answerApp" ng-controller="answerCtrl">
+  <body id="page-top">
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg bg-secondary fixed-top text-uppercase" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand js-scroll-trigger" href="https://lihachat.ru">ЛихаЧат</a>
+        <button class="navbar-toggler navbar-toggler-right text-uppercase bg-primary text-white rounded" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          
+          <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <!-- 
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item mx-0 mx-lg-1">
+              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#how">Как это работает</a>
+            </li>
+            <li class="nav-item mx-0 mx-lg-1">
+              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#join">Подключиться</a>
+            </li>
+            <li class="nav-item mx-0 mx-lg-1">
+              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#faq">Вопросы</a>
+            </li>
+          </ul>
+           -->
+        </div>
+      </div>
+    </nav>
+
+
+  	<div class="container"  ng-app="answerApp" ng-controller="answerCtrl" style="padding-top:150px;">
   		
   		<div ng-show="message" class="text-center">
+  		<!-- 
 	  		<div class="card text-center" style="width:{{mapWidth}}px;">
 	  			<div class="card-header">
 	    			Сообщение для автомобиля
@@ -55,17 +76,19 @@
 	  					width="{{mapWidth}}" height="{{mapHeight}}" alt="Место, где все произошло"/>
 				</a>				
 	  		</div>
-
+-->
 	  		<h3>
 	  			Сообщение для автомобиля {{message.carNumberTo}} 
 	  		</h3>
+	  		<!-- 
 	  		<div style="position:relative;width:600px;"> 
 		    	<img src="/images/icons/car-front-driver.svg" width="300px">
 		    	<img src="/images/icons/baloon.svg" style="position:absolute;left: 0; right: 0; margin-left: auto; margin-right: auto; width: 100px; top:10px;">
 		    	<img src="/images/icons/car-front.svg" width="300px">
-		    	<!--  <img src="http://bestsmileys.ru/ng/X256KTR79.gif" style="position:absolute;left: 0; right: 0; margin-left: auto; margin-right: auto; width: 100px; top:150px;"> -->
+		    	< ! - -  <img src="http://bestsmileys.ru/ng/X256KTR79.gif" style="position:absolute;left: 0; right: 0; margin-left: auto; margin-right: auto; width: 100px; top:150px;"> - - >
 		    	<img ng-src="{{convertNumberToUrl(message.carNumberTo)}}" style="position:absolute;left: 0; right: 0; margin-left: auto; margin-right: auto; width: 100px; top:410px;">
 		    </div>
+		     -->
 	  		<div>от {{message.from.userDesc}}</div>
 	  		<div>{{message.message}}</div>
 	  		<div>Место: {{message.locationTitle}}</div>
@@ -73,11 +96,13 @@
 	  		<img ng-src="https://static-maps.yandex.ru/1.x/?ll={{message.longitude}},{{message.latitude}}&pt={{message.longitude}},{{message.latitude}},pmwtl&l=map&z=14&size={{mapWidth}},{{mapHeight}}"
 	  		width="{{mapWidth}}" height="{{mapHeight}}" alt="Место, где все произошло"/>
 	  		
-	  		<div ng-show="message.answer == null && message.messageType.answers.length > 0">
-		  		<h4>Вы можете ответить</h4>
+	  		<div ng-show="message.answer == null && message.messageType.answers.length > 0" class="text-center">
+		  		<h4>Выберите вариант ответа и 
+		  		<br>
+		  		мы пошлем его отправителю</h4>
 		  		<div class="text-left" ng-class="{'has-error' : error.fieldName=='phone'}">
   					<label for="phone">Последние 4 цифры вашего телефона</label>
-		  			<input type="text" name="phone" ng-model="phone" placeholder="0000" maxlength="4" >
+		  			<input type="text" name="phone" ng-model="phone" placeholder="1234" maxlength="4">
 		  		</div>
 		  		<div class="text-left" ng-repeat="option in message.messageType.answers" >
 	  				<input type="radio" name="answer" ng-model="formData.answer" ng-value="option" id="option-{{option.name}}">
@@ -94,12 +119,34 @@
 	  		<div ng-show="message.answer != null">
 	  			Вы ответили {{message.answer.message}}
 	  		</div>
+		  	<div style="padding-top:50px;padding-bottom:50px">
+		  		<a href="https://lihachat.ru/#join">Подключайтесь</a> к нам и вы сможете посылать сообщения другим водителям по номеру автомобиля
+				<br>
+		          <a class="btn btn-xl btn-primary btn-outline-light1" href="https://lihachat.ru/#join">
+		            <i class="fa fa-sign-in mr-2"></i>
+              		Подключиться к ЛихаЧат
+              	  </a>
+		  		
+		  	</div>
 	  		 
   		</div>
-	  	<div style="padding-top:50px;">
-	  		Подключайтесь к нам и вы сможете посылать сообщения другим водителям по номеру автомобиля
-	  	</div>
   	</div>
+  	
+
+    <div class="copyright py-4 text-center text-white">
+      <div class="container">
+        <small>Copyright &copy; ЛихаЧат 2018</small>
+        
+                <a class="btn btn-outline-light btn-social text-center rounded-circle" href="https://fb.me/liha4at">
+                  <i class="fa fa-fw fa-facebook"></i>
+                </a>
+                <a class="btn btn-outline-light btn-social text-center rounded-circle" href="https://vk.com/lihachat">
+                  <i class="fa fa-fw fa-vk"></i>
+                </a>
+
+      </div>
+    </div>
+  	
   </body>
 </html>
 

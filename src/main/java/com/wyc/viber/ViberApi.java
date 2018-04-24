@@ -124,6 +124,9 @@ public class ViberApi {
 		if(type == null) {
 			type = msg == null ? null : ViberMessageType.text;
 		}
+		if(keyboard != null && keyboard.getButtons() == null || keyboard.getButtons().length == 0) {
+			keyboard = null;
+		}
 		ViberMessage message = ViberMessage.builder()
 				.receiver(to)
 				.text(msg)
@@ -136,29 +139,6 @@ public class ViberApi {
 		ObjectMapper mapper = createObjectMapper();
 		String json = mapper.writeValueAsString(message);  
 				 
-		String s =		 "{\"receiver\":\"" + to + "\", \"type\":\"text\", \"text\":\"" + msg + "\", \"sender\":{\"name\":\"LihaChat\"}, "
-				+ "\"keyboard\":{"
-				+ "\"Type\":\"keyboard\","
-				+ "\"DefaultHeight\":false,"
-				+ "\"Buttons\":[ "
-				+ "{"
-				+ "\"ActionType\":\"reply\","
-				+ "\"Columns\":3,"
-				+ "\"ActionBody\":\"Hello My Friend\","
-				+ "\"Text\":\"Key Text\","
-				+ "\"TextSize\":\"regular\""
-				+ "},"
-				+ "{"
-				+ "\"ActionType\":\"reply\","
-				+ "\"ActionBody\":\"Button2\","
-				+ "\"Columns\":3,"
-				+ "\"BgColor\":\"#00FF00\","
-				+ "\"Text\":\"I like it\","
-				+ "\"TextSize\":\"regular\""
-				+ "}"
-		 		+ "]"
-		 		+ "}"
-		 		+ "}";
 		RequestBody body = RequestBody.create(MediaType.parse("text/json"), json);
 		log.info("Sending " + json);
 		Response response = doRequest("/pa/send_message", body);
@@ -238,7 +218,7 @@ public class ViberApi {
 		String sActionBody = type == ViberButtonActionType.open_url ? annotation.url() : "";
 		
 		if(StringUtils.isEmpty(sActionBody)) {
-			ViberButtonActionBody actionBody = new ViberButtonActionBody(Event.clicked, beanName, method.getName());
+			ViberButtonActionBody actionBody = ViberButtonActionBody.builder().event(Event.clicked).beanName(beanName).methodName(method.getName()).build();
 			ObjectMapper mapper = new ObjectMapper();
 			try {
 				sActionBody = mapper.writeValueAsString(actionBody);

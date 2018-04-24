@@ -114,6 +114,11 @@ public class ViberBot {
 				ViberButtonActionBody actionBody = mapper.readValue(incomingMessage.getText(), ViberButtonActionBody.class);
 				if(actionBody.getBeanName() != null) {
 					data = actionBody.getBeanName() + "." + actionBody.getMethodName();
+					if(actionBody.getParams() != null) {
+						for(String p : actionBody.getParams()) {
+							data = data + "." + p;
+						}
+					}
 				} else {
 					
 				}

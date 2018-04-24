@@ -158,24 +158,19 @@ public class DriverBotService {
 
 	
 	@ReplyBotMethod
-	public void reply(DriveMessageType messageType, @ReplyMessageId Integer replyMessageId, @BotUser String currentUserId) {
+	public void reply(DriveMessageType messageType, @ReplyMessageId Long replyMessageId, @BotUser String currentUserId) {
 		log.info("Reply");
-		Person sender = personRepository.findByTelegramId(Integer.parseInt(currentUserId)).orElseThrow(() -> new ResourceNotFoundException("Can not find person by telegram id = '" + currentUserId + "'"));
-		Optional<DriveMessageDelivery> messageDeliveryOpt = driveMessageDeliveryRepository.findBySentMessageId(replyMessageId);
-		if(messageDeliveryOpt.isPresent()) {
-			DriveMessageDelivery replyMessageDelivery = messageDeliveryOpt.get();
-			DriveMessage replyMessage = replyMessageDelivery.getDriveMessage();
-			DriveMessage driveMessage = DriveMessage.builder()
-					.from(sender)
-					.carNumberTo(replyMessage.getFrom().getCarNumber())
-					.creationDate(new Date())
-					.messageType(messageType)
-					.message(messageType.getTitle())
-					.smsMessage(messageType.getSms())
-					.repliedTo(replyMessage)
-					.build();
-			driveMessageRepository.save(driveMessage);
-			
-		}
+		Person sender = personRepository.findByViberId(currentUserId).orElseThrow(() -> new ResourceNotFoundException("Can not find person by telegram id = '" + currentUserId + "'"));
+		DriveMessage replyMessage = driveMessageRepository.findOne(replyMessageId);
+		DriveMessage driveMessage = DriveMessage.builder()
+				.from(sender)
+				.carNumberTo(replyMessage.getFrom().getCarNumber())
+				.creationDate(new Date())
+				.messageType(messageType)
+				.message(messageType.getTitle())
+				.smsMessage(messageType.getSms())
+				.repliedTo(replyMessage)
+				.build();
+		driveMessageRepository.save(driveMessage);
 	}
 }

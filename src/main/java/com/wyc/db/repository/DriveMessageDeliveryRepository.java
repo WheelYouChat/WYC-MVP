@@ -12,7 +12,7 @@ import com.wyc.db.model.DriveMessageDelivery.DeliveryType;
 @Repository
 public interface DriveMessageDeliveryRepository extends PagingAndSortingRepository<DriveMessageDelivery, String>{
 	Optional<DriveMessageDelivery> findByCode(String code);
-	Optional<DriveMessageDelivery> findBySentMessageId(Integer sentMessageId);
+	Optional<DriveMessageDelivery> findBySentMessageId(String sentMessageId);
 	List<DriveMessageDelivery> findByPhoneNumberOrderBySentDate(String phoneNumber);
 	List<DriveMessageDelivery> findByCompletedAndDeliveryType(boolean completed, DeliveryType deliveryType);
 	

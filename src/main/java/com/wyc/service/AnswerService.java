@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wyc.Location;
 import com.wyc.MethodDesc;
 import com.wyc.annotation.BotMethod;
@@ -48,10 +49,11 @@ import com.wyc.db.repository.PersonRepository;
 import com.wyc.viber.ViberApi;
 import com.wyc.viber.ViberButton;
 import com.wyc.viber.ViberButton.ViberButtonActionType;
+import com.wyc.viber.ViberButtonActionBody;
 import com.wyc.viber.ViberKeyBoard;
 import com.wyc.viber.ViberKeyBoard.ViberKeyBoardType;
-import com.wyc.viber.ViberMessage.ViberMessageType;
 import com.wyc.viber.ViberMessage;
+import com.wyc.viber.ViberMessage.ViberMessageType;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -229,6 +231,7 @@ public class AnswerService {
 			} else if(isMethod(data)) {
 				String methodId = data;
 				
+				
 				findMethod(methodId).ifPresent((bm) -> {
 					// Remove previous context
 					Optional<PersonContext> personContextOptional = personContextRepository.findByPersonId(user.getId());
@@ -240,7 +243,16 @@ public class AnswerService {
 					});
 					
 					Method method = bm.getMethod();
-					
+
+					String text = incomingMessage.getText();
+					ObjectMapper mapper = new ObjectMapper();
+					ViberButtonActionBody actionBody = null;
+					try {
+						actionBody = mapper.readValue(text, ViberButtonActionBody.class);
+					} catch (IOException e1) {
+						log.error("Error parsing action body", e1);
+					}
+
 					// Create new context
 					PersonContext personContext = PersonContext.builder()
 							.id(user.getId() + " - " + methodId)
@@ -250,7 +262,7 @@ public class AnswerService {
 							.lastActivityDate(new Date())
 							.build();
 					personContextRepository.save(personContext);
-					personContext = prepareContext(personContext, method, methodId, incomingMessage.getId());
+					personContext = prepareContext(personContext, method, methodId, /* incomingMessage.getMessageId() */ actionBody.getReplyToMessageId());
 					if(contextIsReady(personContext, method)) {
 						invoke(bm.getBean(), personContext, method, null);
 					} else {
@@ -527,6 +539,8 @@ public class AnswerService {
 				args[item.getIdx()] = item.getValue();
 			} else if(paramType == int.class || paramType == Integer.class) {
 				args[item.getIdx()] = Integer.parseInt(item.getValue());
+			} else if(paramType == long.class || paramType == Long.class) {
+				args[item.getIdx()] = Long.parseLong(item.getValue());
 				/*
 			} else if(paramType == IncomingMessage.class) {
 				Contact contact = new Contact() {

@@ -22,6 +22,8 @@ import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.exceptions.TelegramApiRequestException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wyc.MethodDesc;
 import com.wyc.WYCConfig;
 import com.wyc.annotation.BotService;
@@ -54,7 +56,9 @@ import com.wyc.sms.sender.SMSSender;
 import com.wyc.viber.ViberApi;
 import com.wyc.viber.ViberBot;
 import com.wyc.viber.ViberButton;
+import com.wyc.viber.ViberButtonActionBody;
 import com.wyc.viber.ViberButton.ViberButtonActionType;
+import com.wyc.viber.ViberButtonActionBody.Event;
 import com.wyc.viber.ViberKeyBoard;
 import com.wyc.viber.ViberKeyBoard.ViberKeyBoardType;
 import com.wyc.viber.ViberMessage.ViberMessageType;
@@ -216,7 +220,7 @@ public class WYCBotScheduledTask {
 						String text = createMessageText(message);
 						sendMessage.setText(text);
 						
-						ViberKeyBoard replyMarkup = createReplyButtons(message.getMessageType());
+						ViberKeyBoard replyMarkup = createReplyButtons(message.getMessageType(), message.getId());
 						sendMessage.setKeyboard(replyMarkup);
 	
 						DriveMessageDelivery messageDelivery = DriveMessageDelivery
@@ -255,20 +259,33 @@ public class WYCBotScheduledTask {
 	}
 	
 
-	protected ViberKeyBoard createReplyButtons(DriveMessageType messageType) {
+	protected ViberKeyBoard createReplyButtons(DriveMessageType messageType, Long replyToMessageId) {
 		
 		List<MethodDesc> replyMethods = getReplyMethods();
 		String dataPrefix = "";
 		List<ViberButton> buttons = new ArrayList<>();
+		String beanName = "";
+		String methodName = "";
 		if(replyMethods.size() > 0) {
 			MethodDesc methodDesc = replyMethods.get(0);
-			dataPrefix = methodDesc.getBeanName() + "." + methodDesc.getMethod().getName() + ".";
+			beanName = methodDesc.getBeanName();
+			methodName = methodDesc.getMethod().getName();
 		}
 		if(messageType != null && messageType.getAnswers().length > 0) {
 			for(DriveMessageType answer : messageType.getAnswers()) {
+				String sActionBody = dataPrefix + answer.getName();
+				// TODO redesign it reply
+				ViberButtonActionBody actionBody = new ViberButtonActionBody(Event.clicked, beanName, methodName, new String[]{answer.getName()}, replyToMessageId);
+				ObjectMapper mapper = new ObjectMapper();
+				try {
+					sActionBody = mapper.writeValueAsString(actionBody);
+				} catch (JsonProcessingException e) {
+					log.error("Error (that never should be)", e);
+				}
+
 				ViberButton button = ViberButton
 						.builder()
-						.ActionBody(dataPrefix + answer.getName())
+						.ActionBody(sActionBody)
 						.ActionType(ViberButtonActionType.reply)
 						.Text(answer.getTitle())
 						.BgColor(answer.getColor())
@@ -316,17 +333,17 @@ public class WYCBotScheduledTask {
 		String res = "";
 		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yy hh:mm");
 		if(message.getFrom() != null) {
-			res = res + "Вам пишет " + message.getFrom().getUserDesc() + "\n" + message.getMessage() + 
+			res = res + "Вам пишет " + message.getFrom().getUserDesc() + "\n\n" + message.getMessage() + 
 					(message.getLocationTitle() == null ? "" : "\nМесто: " + message.getLocationTitle());
 		} else {
 			// Это ответ от незарегистрированного пользователя
-			res = res + "Вам пишет " + message.getRepliedTo().getCarNumberTo() + "\n*" + message.getMessage() +"*";
+			res = res + "Вам пишет " + message.getRepliedTo().getCarNumberTo() + "\n" + message.getMessage() +"";
 		}
 		// res = res + (message.getLocationTitle() == null ? "" : "\nМесто: " + message.getLocationTitle()) + "\n";
 
 		if(message.getRepliedTo() != null) {
 			res = res + "\n\nв ответ на ваше сообщение от " + sdf.format(message.getRepliedTo().getCreationDate()) +  
-					"\n_" +message.getRepliedTo().getMessage() + "_" +
+					"\n" +message.getRepliedTo().getMessage() + "" +
 					"\nМесто : " + message.getRepliedTo().getLocationTitle() +
 					"";
 			

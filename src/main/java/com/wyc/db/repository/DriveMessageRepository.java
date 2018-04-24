@@ -9,7 +9,7 @@ import com.wyc.db.model.DriveMessage;
 import com.wyc.db.model.Person;
 
 @Repository
-public interface DriveMessageRepository extends PagingAndSortingRepository<DriveMessage, String>{
+public interface DriveMessageRepository extends PagingAndSortingRepository<DriveMessage, Long>{
 	Iterable<DriveMessage> findByDeliveredIsFalseOrderByIdDesc();
 	List<DriveMessage> findByLocationTitleIsNullAndLongitudeIsNotNull();
 	List<DriveMessage> findByRepliedToId(Long messageId);
