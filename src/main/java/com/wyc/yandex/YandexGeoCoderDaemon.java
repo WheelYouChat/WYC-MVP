@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wyc.WYCConfig;
 import com.wyc.db.model.DriveMessage;
 import com.wyc.db.repository.DriveMessageRepository;
 
@@ -25,47 +26,52 @@ public class YandexGeoCoderDaemon {
 	@Autowired
 	private DriveMessageRepository driveMessageRepository;
 	
+	@Autowired
+	private WYCConfig wycConfig;
+	
 	@Scheduled(fixedRate=10000)
 	public void scanLocation() {
-		List<DriveMessage> messages = driveMessageRepository.findByLocationTitleIsNullAndLongitudeIsNotNull();
-		messages.stream().parallel().forEach(dm -> {
-			String url = "https://geocode-maps.yandex.ru/1.x/?format=json&geocode=" + dm.getLongitude() + "," + dm.getLatitude();
-			OkHttpClient client = new OkHttpClient();
-			Request request = new Request.Builder()
-				      .url(url)
-				      .build();
-
-			try {
-				Response response = client.newCall(request).execute();
-				if(response.isSuccessful()) {
-					String body = response.body().string();
-					log.info(body);
-					ObjectMapper om = new ObjectMapper();
-					om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-					YandexGeo yandexGeo = om.readValue(body, YandexGeo.class);
-					log.debug("yansexGeo = ", yandexGeo);
-					if(yandexGeo.response != null && 
-							yandexGeo.response.GeoObjectCollection != null && 
-							yandexGeo.response.GeoObjectCollection.featureMember != null && 
-							yandexGeo.response.GeoObjectCollection.featureMember.length > 0 
-							// && yandexGeo.response.GeoObjectCollection.featureMember[0].GeoObject != null 
-							) {
-						for(FeatureMember feature : yandexGeo.response.GeoObjectCollection.featureMember) {
-							if(feature.GeoObject != null 
-									&& feature.GeoObject.metaDataProperty != null 
-									&& feature.GeoObject.metaDataProperty.GeocoderMetaData != null 
-									&& "street".equalsIgnoreCase(feature.GeoObject.metaDataProperty.GeocoderMetaData.precision)) {
-								dm.setLocationTitle(feature.GeoObject.name);
-								driveMessageRepository.save(dm);
-								break;
+		if(wycConfig.isViberDelivery()) {
+			List<DriveMessage> messages = driveMessageRepository.findByLocationTitleIsNullAndLongitudeIsNotNull();
+			messages.stream().parallel().forEach(dm -> {
+				String url = "https://geocode-maps.yandex.ru/1.x/?format=json&geocode=" + dm.getLongitude() + "," + dm.getLatitude();
+				OkHttpClient client = new OkHttpClient();
+				Request request = new Request.Builder()
+					      .url(url)
+					      .build();
+	
+				try {
+					Response response = client.newCall(request).execute();
+					if(response.isSuccessful()) {
+						String body = response.body().string();
+						log.info(body);
+						ObjectMapper om = new ObjectMapper();
+						om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+						YandexGeo yandexGeo = om.readValue(body, YandexGeo.class);
+						log.debug("yansexGeo = ", yandexGeo);
+						if(yandexGeo.response != null && 
+								yandexGeo.response.GeoObjectCollection != null && 
+								yandexGeo.response.GeoObjectCollection.featureMember != null && 
+								yandexGeo.response.GeoObjectCollection.featureMember.length > 0 
+								// && yandexGeo.response.GeoObjectCollection.featureMember[0].GeoObject != null 
+								) {
+							for(FeatureMember feature : yandexGeo.response.GeoObjectCollection.featureMember) {
+								if(feature.GeoObject != null 
+										&& feature.GeoObject.metaDataProperty != null 
+										&& feature.GeoObject.metaDataProperty.GeocoderMetaData != null 
+										&& "street".equalsIgnoreCase(feature.GeoObject.metaDataProperty.GeocoderMetaData.precision)) {
+									dm.setLocationTitle(feature.GeoObject.name);
+									driveMessageRepository.save(dm);
+									break;
+								}
 							}
 						}
 					}
+				}catch (Exception e) {
+					log.error("Error getting " + url, e);
 				}
-			}catch (Exception e) {
-				log.error("Error getting " + url, e);
-			}
-		});
+			});
+		}
 	}
 	
 	@Data

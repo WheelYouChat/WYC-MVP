@@ -17,15 +17,14 @@ public class AutoStart {
 	
 	@Scheduled(fixedDelay=100000, initialDelay=5000)
 	public void init() {
+		// Стартовать сразу нельзя- потому что сразу после операции set_webhook viber пойдет его проверять,
+		// а порт на прослушку еще не открыт- поэтому надо подождать какое-то время
 		try {
 			if(!viberBot.isInitialized()) {
 				viberBot.initialize();
-				
-				// TODO remove it
-				// viberBot.sendMenu("sSPFZVqFK9BNhd4qFve6Rw==");
 			}
 		} catch (IOException e) {
-			log.error("Error staring", viberBot);
+			log.error("Error starting" + viberBot, e);
 		}
 	}
 }
