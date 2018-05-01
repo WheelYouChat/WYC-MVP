@@ -26,6 +26,7 @@ import com.wyc.annotation.BotService;
 import com.wyc.annotation.BotUser;
 import com.wyc.annotation.ReplyMessageId;
 import com.wyc.chat.BotParamValidator;
+import com.wyc.chat.BotParamValidatorExt;
 import com.wyc.chat.EnumMenu;
 import com.wyc.chat.HasColor;
 import com.wyc.chat.HasTitle;
@@ -37,6 +38,7 @@ import com.wyc.db.model.ContextItem;
 import com.wyc.db.model.DriveMessage;
 import com.wyc.db.model.DriveMessage.DriveMessageType;
 import com.wyc.db.model.DriveMessageDelivery;
+import com.wyc.db.model.HasRoles;
 import com.wyc.db.model.IncomingMessage;
 import com.wyc.db.model.Person;
 import com.wyc.db.model.Person.Role;
@@ -409,7 +411,7 @@ public class AnswerService {
 				
 				if(idx >= 0) {
 					// Check
-					List<String> errors = checkValue(method, idx, value, message);
+					List<String> errors = checkValue(method, idx, value, message, pc.getPerson());
 					if(!errors.isEmpty()) {
 						// Value is incorrect 
 						String errorMessage = createErrorMessage(errors);
@@ -513,10 +515,15 @@ public class AnswerService {
 		});
 		if(!pcOpt.isPresent()) {
 			// Нет контекста- посылаем меню
-			ViberKeyBoard mainMenu = viberApi.createMainMenu();
+			// ... с предупреждением, что профиль не заполнен
+			String text = "Используйте меню, чтобы начать диалог";
+			if((contact.getRole() == null || contact.getRole() == Role.PEDESTRIAN) && contact.getNickname() == null) {
+				text = "Заполните свой профиль водителя (меню Заполнить профиль) и вам будут доступны все функции.";
+			}
+			ViberKeyBoard mainMenu = viberApi.createMainMenu(contact.getRole());
 			ViberMessage sendMessage = ViberMessage
 					.builder()
-					.text("Используйте меню, чтобы начать диалог")
+					.text(text)
 					.type(ViberMessageType.text)
 					.keyboard(mainMenu)
 					.build();
@@ -530,7 +537,7 @@ public class AnswerService {
 
 
 	private void invoke(Object bean, PersonContext personContext, Method method, Integer replayToMessageId) {
-		
+		Person person = personContext.getPerson();
 		Object[] args = new Object[method.getParameterCount()];
 		List<ContextItem> items = contextItemRepository.findByPersonContextId(personContext.getId());
 		for(ContextItem item : items) {
@@ -645,7 +652,7 @@ public class AnswerService {
 			if(result instanceof String[]) {
 				String [] arrResult = (String[]) result;
 				for(String text : arrResult) {
-					ViberKeyBoard mainMenu = viberApi.createMainMenu();
+					ViberKeyBoard mainMenu = viberApi.createMainMenu(person.getRole());
 					ViberMessage sendMessage = ViberMessage
 							.builder()
 							.text(text)
@@ -653,7 +660,7 @@ public class AnswerService {
 							.keyboard(mainMenu)
 							.build();
 					try {
-						viberApi.sendMessage(personContext.getPerson().getViberId(), sendMessage, "ЛихаЧат");
+						viberApi.sendMessage(person.getViberId(), sendMessage, "ЛихаЧат");
 					} catch (IOException e) {
 						log.error("Error sending", e);
 					}
@@ -720,19 +727,12 @@ public class AnswerService {
 					//sendMessage.setType(ViberMessageType.location);
 					
 				} else if(paramType.isEnum()) {
-					ViberKeyBoard keyboard = createInlineKeyboardForEnums(paramType.getEnumConstants());
+					ViberKeyBoard keyboard = createInlineKeyboardForEnums(personContext.getPerson().getRole(), paramType.getEnumConstants());
 					sendMessage.setKeyboard(keyboard);
 				}
 				ViberKeyBoard backToMainMenu = viberApi.createMenuBackToMainMenu();
 				ViberKeyBoard keyboard;
-				if(sendMessage.getKeyboard() == null) {
-					keyboard = backToMainMenu;
-				} else {
-					keyboard = sendMessage.getKeyboard();
-					List<ViberButton> buttons = keyboard.getButtons() == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(keyboard.getButtons()));
-					buttons.addAll(Arrays.asList(backToMainMenu.getButtons()));
-					keyboard.setButtons(buttons.toArray(new ViberButton[buttons.size()]));
-				}
+				keyboard = joinKeyBoard(backToMainMenu, sendMessage.getKeyboard());
 				sendMessage.setKeyboard(keyboard);
 				
 				return sendMessage;
@@ -742,13 +742,27 @@ public class AnswerService {
 		
 	}
 	
-	protected ViberKeyBoard createInlineKeyboardForEnums(Object... enumValues) {
+	protected ViberKeyBoard joinKeyBoard(ViberKeyBoard src, ViberKeyBoard dest) {
+		dest = dest == null ? ViberKeyBoard.builder().Type(ViberKeyBoardType.keyboard).build() : dest; 
+		List<ViberButton> buttons = dest.getButtons() == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(dest.getButtons()));
+		buttons.addAll(Arrays.asList(src.getButtons()));
+		dest.setButtons(buttons.toArray(new ViberButton[buttons.size()]));
+		return dest;
+	}
+	
+	protected ViberKeyBoard createInlineKeyboardForEnums(Role role, Object... enumValues) {
 		List<ViberButton> buttons = new ArrayList<>();
 		for(Object enumValue : enumValues) {
 			boolean add = true;
 			if(enumValue instanceof EnumMenu) {
 				EnumMenu enumMenu = (EnumMenu) enumValue;
 				add = enumMenu.isRootMenu();
+			}
+			if(add && enumValue instanceof HasRoles) {
+				HasRoles hasRoles = (HasRoles) enumValue;
+				if(hasRoles.getRoles() != null && hasRoles.getRoles().length > 0) {
+					add = Arrays.stream(hasRoles.getRoles()).filter(r -> role == r).findFirst().isPresent();
+				}
 			}
 			if(add) {
 				ViberButton button = ViberButton.builder().ActionType(ViberButtonActionType.reply).build();
@@ -770,6 +784,7 @@ public class AnswerService {
 				.Type(ViberKeyBoardType.keyboard)
 				.Buttons(buttons.toArray(new ViberButton[buttons.size()]))
 			.build();
+		
 		return replyMarkup;
 	}
 	
@@ -797,7 +812,7 @@ public class AnswerService {
 		
 	}
 
-	private List<String> checkValue(Method method, int idx, String text, IncomingMessage message) {
+	private List<String> checkValue(Method method, int idx, String text, IncomingMessage message, Person person) {
 		Location location = message;
 		List<String> res = new ArrayList<>();
 		Class<?>[] paramTypes = method.getParameterTypes();
@@ -820,12 +835,15 @@ public class AnswerService {
 				try {
 					validator = validatorClass.newInstance();
 					List<String> newErrs = null;
-					if(validator.getValidationClass() == String.class) {
-						newErrs = validator.validate(text);
-					} else if(validator.getValidationClass() == IncomingMessage.class) {
-						newErrs = validator.validate(message);
-					} else if(validator.getValidationClass() == Object.class) {
-						newErrs = validator.validate(text);
+					if(validator.getValidationClass() == String.class ||
+							validator.getValidationClass() == IncomingMessage.class ||
+							validator.getValidationClass() == Object.class) {
+						if(validator instanceof BotParamValidatorExt) {
+							BotParamValidatorExt validatorExt = (BotParamValidatorExt) validator;
+							newErrs = validatorExt.validate(text, person);
+						} else {
+							newErrs = validator.validate(text);
+						}
 					} else {
 						throw new IllegalArgumentException("Unknown validation class " + validator.getValidationClass());
 					}

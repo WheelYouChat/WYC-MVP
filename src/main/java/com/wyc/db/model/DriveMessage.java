@@ -13,6 +13,7 @@ import javax.persistence.ManyToOne;
 import com.wyc.chat.EnumMenu;
 import com.wyc.chat.HasColor;
 import com.wyc.chat.HasTitle;
+import com.wyc.db.model.Person.Role;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,48 +32,65 @@ public class DriveMessage {
 
 	@Getter
 	@AllArgsConstructor
-	public static enum DriveMessageType implements HasTitle, HasColor, EnumMenu {
+	public static enum DriveMessageType implements HasTitle, HasColor, EnumMenu, HasRoles {
 		//                   123456789012345678901234567890
 		
 		// Ответы на жалобы
-		SORRY              ("Извините", "Извините", GREEN),
-		SORRY_HURRY        ("Извините, очень спешил", "Извините, очень спешил", GREEN),
-		I_WAS_NOT_THERE    ("Вы ошиблись, меня там не было", "Вы ошиблись, меня там не было", BLUE),
-		CAR_IS_NOT_THERE   ("Вы ошиблись, машина в другом месте", "Вы ошиблись, машина в другом месте", BLUE),
-		APOLOGY_ACCEPTED   ("Извинения приняты", "Извинения приняты", GREEN),
-		APOLOGY_ACCEPTED_BUT_IT_WAS_DANGEROUS ("Принято, но это был опасный маневр", "Принято, но это был опасный маневр", GREEN),
-		PLEASE             ("Пожалуйста", "Пожалуйста", GREEN),
-		I_DONT_HAVE_TO_GIVE_WAY("Я не обязан был уступать", "Я не обязан был уступать", RED),
+		SORRY              ("Извините", "Извините", GREEN, new Person.Role[0]),
+		SORRY_USUALLY_DO   ("Извините, обычно я так делаю", "Извините, обычно я так делаю", GREEN, new Person.Role[0]),
+		SORRY_HURRY        ("Извините, очень спешил", "Извините, очень спешил", GREEN, new Person.Role[0]),
+		SORRY_TRAFFIC      ("Извините, была пробка и не куда было деваться", "Извините, была пробка и не куда было деваться", GREEN, new Person.Role[0]),
+		SORRY_I_HAD_REASON ("Извините, но у меня были серьезные причины так поступить", "Извините, но у меня были серьезные причины так поступить", YELLOW, new Person.Role[0]),
+		I_WAS_NOT_THERE    ("Вы ошиблись, меня там не было", "Вы ошиблись, меня там не было", BLUE, new Person.Role[0]),
+		CAR_IS_NOT_THERE   ("Вы ошиблись, машина в другом месте", "Вы ошиблись, машина в другом месте", BLUE, new Person.Role[0]),
+		APOLOGY_ACCEPTED   ("Извинения приняты", "Извинения приняты", GREEN, new Person.Role[0]),
+		APOLOGY_ACCEPTED_BUT_IT_WAS_DANGEROUS ("Принято, но это был опасный маневр", "Принято, но это был опасный маневр", GREEN, new Person.Role[0]),
+		PLEASE             ("Пожалуйста", "Пожалуйста", GREEN, new Person.Role[0]),
+		I_DONT_HAVE_TO_GIVE_WAY("Я не обязан был уступать", "Я не обязан был уступать", RED, new Person.Role[0]),
+		GLAD_MUSIC_IS_OK     ("Рад, что вам понравилось", "Рад, что вам понравилось", GREEN, new Person.Role[0]),
 		
-		//                   123456789012345678901234567890
-		// Жалобы
-		CUT_OFF            ("Вы меня подрезали",         "Вы меня подрезали", RED, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
-		CUT_OFF_SORRY      ("Извините,что подрезал",     "Извините, что подрезал", GREEN, APOLOGY_ACCEPTED, APOLOGY_ACCEPTED_BUT_IT_WAS_DANGEROUS, I_WAS_NOT_THERE),
-		THANKS_GIVE_WAY    ("Спасибо,за проезд",         "Спасибо, что уступили дорогу", GREEN, PLEASE, I_WAS_NOT_THERE),
-		DANGEROUS_DRIVING  ("Вы опасно ехали",           "Вы создавали опасные ситуации на дороге для других водителей", RED, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
-		BROKE_RULES        ("Вы нарушили ПДД",           "Вы нарушили правила дорожного движения", RED, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
-		DID_NOT_GIVE_WAY   ("Вы не уступили дорогу",     "Вы мне не уступили дорогу", RED, SORRY, SORRY_HURRY, I_DONT_HAVE_TO_GIVE_WAY, I_WAS_NOT_THERE),
-		WRONG_PARKING      ("Вы плохо припаркованы",     "Ваша машина неправильно припаркована", RED, SORRY, SORRY_HURRY, CAR_IS_NOT_THERE),
-		BLOCK_PARKING      ("Вы меня блокировали",       "Ваша машина заблокировала мне выезд", RED, SORRY, SORRY_HURRY, CAR_IS_NOT_THERE);
-                                      
-		DriveMessageType(String text) {
-			this(text, text, new DriveMessageType[]{}, true, null);
+		//                     123456789012345678901234567890
+		// Жалобы от водителей (иногда пешеходов
+		CUT_OFF              ("Вы меня подрезали",         "Вы меня подрезали", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
+		CUT_OFF_SORRY        ("Извините,что подрезал",     "Извините, что подрезал", GREEN, new Person.Role[]{Role.DRIVER, Role.ADMIN}, APOLOGY_ACCEPTED, APOLOGY_ACCEPTED_BUT_IT_WAS_DANGEROUS, I_WAS_NOT_THERE),
+		THANKS_GIVE_WAY      ("Спасибо,за проезд",         "Спасибо, что уступили дорогу", GREEN, new Person.Role[]{Role.DRIVER, Role.ADMIN}, PLEASE, I_WAS_NOT_THERE),
+		DANGEROUS_DRIVING    ("Вы опасно ехали",           "Вы создавали опасные ситуации на дороге для других водителей", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
+		BROKE_RULES          ("Вы нарушили ПДД",           "Вы нарушили правила дорожного движения", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
+		DID_NOT_GIVE_WAY     ("Вы не уступили дорогу",     "Вы мне не уступили дорогу", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_HURRY, I_DONT_HAVE_TO_GIVE_WAY, I_WAS_NOT_THERE),
+		WRONG_PARKING        ("Вы плохо припаркованы",     "Ваша машина неправильно припаркована", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_HURRY, CAR_IS_NOT_THERE),
+		BLOCK_PARKING        ("Вы меня блокировали",       "Ваша машина заблокировала мне выезд", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_HURRY, CAR_IS_NOT_THERE),
+		LOUD_SIGNAL          ("Вы громко сигналили",       "Вы очень громко сигналили, без явной необходимости", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
+		USE_TURN_LIGHT       ("Включайте поворотник",      "Вы не использовали указатель поворота при перестроении или повороте, прошу используйте его", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DO, I_WAS_NOT_THERE),
+		USE_TURN_LIGHT_PARK  ("Включайте поворотник",      "Вы парковались и не использовали указатель поворотов, прошу используйте его когда ищете парковку или паркуетесь", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DO, I_WAS_NOT_THERE),
+
+		
+		GOOD_MUSIC           ("Класс.песня из вашего авто","Мне понравилась музыка, которая звучала из вашего автомобиля", GREEN, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, GLAD_MUSIC_IS_OK, I_WAS_NOT_THERE),
+		
+		// Жалобы от пешеходов
+		PED_DID_NOT_GIVE_WAY("Вы не пропустили пешехода",  "Вы не пропустили пешехода на пешеходном переходе", RED, new Person.Role[]{Role.PEDESTRIAN, Role.DRIVER, Role.ADMIN}, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
+		PED_BLOCK_CROSSWALK ("Блокировали переход",        "Вы блокировали пешеходный переход или проход пешеходов", RED, new Person.Role[]{Role.PEDESTRIAN, Role.DRIVER, Role.ADMIN}, SORRY, SORRY_TRAFFIC, I_WAS_NOT_THERE),
+		
+		
+		;
+
+		DriveMessageType(String text, Person.Role[] roles) {
+			this(text, text, roles, new DriveMessageType[]{}, true, null);
 		}
 		
-		DriveMessageType(String text, String sms) {
-			this(text, sms, new DriveMessageType[]{}, true, null);
+		DriveMessageType(String text, String sms, Person.Role[] roles) {
+			this(text, sms, roles, new DriveMessageType[]{}, true, null);
 		}
 		
-		DriveMessageType(String text, String sms, DriveMessageType... answers) {
-			this(text, sms, answers, false, null);
+		DriveMessageType(String text, String sms, Person.Role[] roles, DriveMessageType... answers) {
+			this(text, sms, roles, answers, false, null);
 		}
 		
-		DriveMessageType(String text, String sms, String color) {
-			this(text, sms, new DriveMessageType[]{}, true, color);
+		DriveMessageType(String text, String sms, String color, Person.Role[] roles) {
+			this(text, sms, roles, new DriveMessageType[]{}, true, color);
 		}
 		
-		DriveMessageType(String text, String sms, String color, DriveMessageType... answers) {
-			this(text, sms, answers, false, color);
+		DriveMessageType(String text, String sms, String color, Person.Role[] roles, DriveMessageType... answers) {
+			this(text, sms, roles, answers, false, color);
 		}
 		
 		public String getName() {
@@ -81,6 +99,7 @@ public class DriveMessage {
 		
 		private final String sms;
 		private final String title;
+		private final Person.Role roles[];
 		private final DriveMessageType[] answers;
 		
 		/**
@@ -93,6 +112,10 @@ public class DriveMessage {
 		@Override
 		public boolean isRootMenu() {
 			return !answer;
+		}
+		
+		public DriveMessageType[] getAnswers() {
+			return answers;
 		}
 	}
 	

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -161,10 +162,16 @@ public class WYCBotScheduledTask {
 				deliveryStarted = true;
 				if(wycConfig.getBot() != null && !wycConfig.getBot().isDisabled()) {
 					wycBot.deliveryMessages();
+				}
+
+				if(wycConfig.isSmsDelivery()) {
 					deliverySmsMessages();
 					checkSMSDeliveryStatus();
 				}
-				deliveryViberMessages();
+
+				if(wycConfig.isViberDelivery()) {
+					deliveryViberMessages();
+				}
 			} finally {
 				deliveryStarted = false;
 			}
@@ -177,19 +184,21 @@ public class WYCBotScheduledTask {
 	 */
 	@Scheduled(fixedRate=12000) // 2 min
 	protected void clearViberContexts() {
-		Date lastActivityDate = new Date(System.currentTimeMillis() - 1000 * 60 * 1);
-		List<PersonContext> contexts = personContextRepository.findByLastActivityDateLessThan(lastActivityDate);
-		for(PersonContext ctx : contexts) {
-			Person p = ctx.getPerson();
-			if(p.getViberId() != null) {
-				ViberKeyBoard menu = viberApi.createMainMenu();
-				try {
-					viberApi.sendMessage(p.getViberId(), "Начните сначала", menu, ViberMessageType.text, "ЛихаЧат");
-				} catch (IOException e) {
-					log.error("Error sending message to " + p, e);
+		if(wycConfig.isViberDelivery()) {
+			Date lastActivityDate = new Date(System.currentTimeMillis() - 1000 * 60 * 1);
+			List<PersonContext> contexts = personContextRepository.findByLastActivityDateLessThan(lastActivityDate);
+			for(PersonContext ctx : contexts) {
+				Person p = ctx.getPerson();
+				if(p.getViberId() != null) {
+					ViberKeyBoard menu = viberApi.createMainMenu(p.getRole());
+					try {
+						viberApi.sendMessage(p.getViberId(), "Начните сначала", menu, ViberMessageType.text, "ЛихаЧат");
+					} catch (IOException e) {
+						log.error("Error sending message to " + p, e);
+					}
 				}
+				answerService.clearContext(p.getId());
 			}
-			answerService.clearContext(p.getId());
 		}
 	}
 
@@ -294,6 +303,8 @@ public class WYCBotScheduledTask {
 				buttons.add(button);
 			}
 		}
+		ViberKeyBoard mainMenu = viberApi.createMenuBackToMainMenu();
+		buttons.addAll(Arrays.asList(mainMenu.getButtons()));
 		ViberKeyBoard res = ViberKeyBoard
 				.builder()
 				.Type(ViberKeyBoardType.keyboard)
@@ -380,7 +391,7 @@ public class WYCBotScheduledTask {
 							DriveMessageDelivery messageDelivery;
 							try {
 								String code = codeGenerator.generateUniqueString();
-								String text = smsMessageGenerator.generateSMSMessage(message.getMessageType(), message.getCreationDate(), message.getLocationTitle(), code);
+								String text = "" + smsMessageGenerator.generateSMSMessage(message.getMessageType(), message.getCreationDate(), message.getLocationTitle(), code);
 								String smsSentResponse = smsSender.sendMessage(phoneNumber, text);
 								
 								messageDelivery = DriveMessageDelivery.builder()

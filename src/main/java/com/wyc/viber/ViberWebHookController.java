@@ -3,6 +3,7 @@ package com.wyc.viber;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,5 +26,11 @@ public class ViberWebHookController {
 		log.info(body);
 		viberBot.onMessageReceive(body);
 		return 0;
+	}
+	
+	@RequestMapping("/webhooktest")
+	// Этот метод используется для проксирования через NGINX webhook запросов для test бота
+	public Integer viberWebHookTest(@RequestBody String body) throws IOException {
+		return viberWebHook(body);
 	}
 }

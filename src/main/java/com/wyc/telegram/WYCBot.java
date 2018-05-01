@@ -126,6 +126,8 @@ public class WYCBot extends TelegramLongPollingBot {
 
 				SendMessage sendMessage = new SendMessage();
 				
+				Person person;
+				
 				if(!existingPersonOpt.isPresent()) {
 				
 					Person p = Person.builder()
@@ -140,8 +142,10 @@ public class WYCBot extends TelegramLongPollingBot {
 					log.info("Register person " + p);
 
 					personRepository.save(p);
+					person = p;
 					sendMessage.setText("Вы зарегистрированы.");
 				} else {
+					person = existingPersonOpt.get();
 					sendMessage.setText("Вы уже зарегистрированы.");
 				}
 				
@@ -150,7 +154,7 @@ public class WYCBot extends TelegramLongPollingBot {
 				
 				sendMessage.setReplyToMessageId(msg.getMessageId());
 				
-				InlineKeyboardMarkup inlineKeyboardMarkup = createMenu();
+				InlineKeyboardMarkup inlineKeyboardMarkup = createMenu(person.getRole());
 				sendMessage.setReplyMarkup(inlineKeyboardMarkup);
 				clearContext(contact.getId());
 				
@@ -275,12 +279,12 @@ public class WYCBot extends TelegramLongPollingBot {
 		}
 	}
 
-	private InlineKeyboardMarkup createMenu() {
+	private InlineKeyboardMarkup createMenu(Person.Role role) {
 		InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 		List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
 		inlineKeyboardMarkup.setKeyboard(keyboard);
 			
-		List<Pair<String, Method>> botMethods = menuService.getMenuMethods(); 
+		List<Pair<String, Method>> botMethods = menuService.getMenuMethods(role); 
 		
 		for(Pair<String, Method> p : botMethods) {
 			String name = p.getFirst();
@@ -896,7 +900,7 @@ public class WYCBot extends TelegramLongPollingBot {
 
 		if(message.getRepliedTo() != null) {
 			res = res + "\n\nв ответ на ваше сообщение от " + sdf.format(message.getRepliedTo().getCreationDate()) +  
-					"\n_" +message.getRepliedTo().getMessage() + "_" +
+					"\n<i>" +message.getRepliedTo().getMessage() + "</i>" +
 					"\nМесто : " + message.getRepliedTo().getLocationTitle() +
 					"";
 			

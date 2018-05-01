@@ -47,11 +47,19 @@ public class YandexGeoCoderDaemon {
 					if(yandexGeo.response != null && 
 							yandexGeo.response.GeoObjectCollection != null && 
 							yandexGeo.response.GeoObjectCollection.featureMember != null && 
-							yandexGeo.response.GeoObjectCollection.featureMember.length > 0 && 
-							yandexGeo.response.GeoObjectCollection.featureMember[0].GeoObject != null 
+							yandexGeo.response.GeoObjectCollection.featureMember.length > 0 
+							// && yandexGeo.response.GeoObjectCollection.featureMember[0].GeoObject != null 
 							) {
-						dm.setLocationTitle(yandexGeo.response.GeoObjectCollection.featureMember[0].GeoObject.name);
-						driveMessageRepository.save(dm);
+						for(FeatureMember feature : yandexGeo.response.GeoObjectCollection.featureMember) {
+							if(feature.GeoObject != null 
+									&& feature.GeoObject.metaDataProperty != null 
+									&& feature.GeoObject.metaDataProperty.GeocoderMetaData != null 
+									&& "street".equalsIgnoreCase(feature.GeoObject.metaDataProperty.GeocoderMetaData.precision)) {
+								dm.setLocationTitle(feature.GeoObject.name);
+								driveMessageRepository.save(dm);
+								break;
+							}
+						}
 					}
 				}
 			}catch (Exception e) {
@@ -86,5 +94,17 @@ public class YandexGeoCoderDaemon {
 	@NoArgsConstructor
 	public static class GeoObject {
 		private String name;
+		private GeoMetaData metaDataProperty;
 	}
+	
+	public static class GeoMetaData {
+		public GeocoderMetaData GeocoderMetaData;
+	}
+	
+	@Data
+	@NoArgsConstructor
+	public static class GeocoderMetaData {
+		private String precision;
+	}
+	
 }

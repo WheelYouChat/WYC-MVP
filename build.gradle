@@ -89,3 +89,32 @@ eclipse {
     // containers 'org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8'
   }
 }
+
+// Таски для старта viber webhook- их задача только слушать viber webhook порт и регистрировать сообщения из viber
+task viberwebhook1 <<{
+	bootRun { systemProperty "spring.profiles.active", "viberwebhook1" }
+}
+viberwebhook1.finalizedBy bootRun
+
+task viberwebhook2 <<{
+	bootRun { systemProperty "spring.profiles.active", "viberwebhook2" }
+}
+viberwebhook2.finalizedBy bootRun
+
+// Таска- основа бота- она орабатывает сообщения
+task bot <<{
+	bootRun { systemProperty "spring.profiles.active", "bot" }
+}
+bot.finalizedBy bootRun
+
+// Таска для web ответов
+task web <<{
+	bootRun { systemProperty "spring.profiles.active", "web" }
+}
+web.finalizedBy bootRun
+
+// Таска все в одном для разработки
+task allinone <<{
+	bootRun { systemProperty "spring.profiles.active", "allinone" }
+}
+allinone.finalizedBy bootRun

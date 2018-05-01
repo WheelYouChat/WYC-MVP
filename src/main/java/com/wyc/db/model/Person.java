@@ -12,6 +12,7 @@ import javax.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -23,8 +24,15 @@ import lombok.ToString;
 @AllArgsConstructor
 public class Person {
 	
+	@AllArgsConstructor
+	@Getter
 	public static enum Role {
-		DRIVER, ADMIN, FAKE
+		DRIVER("водитель"), 
+		ADMIN("Администратор"), 
+		FAKE("fake"), 
+		PEDESTRIAN("пешеход");
+		
+		private final String title;
 	}
 	
 	@Id
@@ -61,6 +69,9 @@ public class Person {
 	public String getUserDesc() {
 		if(getNickname() == null && getCarName() == null) {
 			return "Неизвестный";
+		}
+		if(getRole() == null || getRole() == Role.PEDESTRIAN) {
+			return Role.PEDESTRIAN.getTitle() + " " + getNickname();
 		}
 		if(getNickname() != null && getCarName() == null) {
 			return getNickname();

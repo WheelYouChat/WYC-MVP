@@ -5,12 +5,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.wyc.db.model.Person;
+
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface BotMethod {
 	String title();
 	String url() default "";
 	String successMessage() default "ok";
+	Person.Role[] roles() default {}; 
 	int order() default 0;
 	int cols() default 3;
 	int rows() default 1;

@@ -106,28 +106,30 @@ public class SMSAeroSender implements SMSSender, SMSDeliveryStatusProvider {
 		try {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		AeroMessageJson aeroMessageJson = mapper.readValue(delivery.getSmsSentResponse(), AeroMessageJson.class);
-		long id = aeroMessageJson.getData().getId();
-		OkHttpClient client = createClient();
-		String url = smsAeroConfig.getHost() + "/v2/sms/status?id=" + id; 
-		Request request = new Request.Builder()
-		      .url(url)
-		      .build();
-		  Response response = client.newCall(request).execute();
-		  String responseStr = response.body().string();
-		  log.info(responseStr);
-		  if(response.isSuccessful()) {
-			  AeroMessageJson aeroMessageResponse = mapper.readValue(responseStr, AeroMessageJson.class);
-			  log.info("" + aeroMessageResponse);
-			  int status = aeroMessageResponse.getData().getStatus();
-			  DeliveryStatus res = STATUS_MAP.get(status);
-			  if(res != null) {
-				  return res;
+		if(delivery != null && delivery.getSmsSentResponse() != null) {
+			AeroMessageJson aeroMessageJson = mapper.readValue(delivery.getSmsSentResponse(), AeroMessageJson.class);
+			long id = aeroMessageJson.getData().getId();
+			OkHttpClient client = createClient();
+			String url = smsAeroConfig.getHost() + "/v2/sms/status?id=" + id; 
+			Request request = new Request.Builder()
+			      .url(url)
+			      .build();
+			  Response response = client.newCall(request).execute();
+			  String responseStr = response.body().string();
+			  log.info(responseStr);
+			  if(response.isSuccessful()) {
+				  AeroMessageJson aeroMessageResponse = mapper.readValue(responseStr, AeroMessageJson.class);
+				  log.info("" + aeroMessageResponse);
+				  int status = aeroMessageResponse.getData().getStatus();
+				  DeliveryStatus res = STATUS_MAP.get(status);
+				  if(res != null) {
+					  return res;
+				  }
 			  }
-		  }
+			}
 		}catch(Exception e) {
 			log.error("", e);
 		}
-		  return DeliveryStatus.IN_PROGRESS;
+		return DeliveryStatus.IN_PROGRESS;
 	}	
 }

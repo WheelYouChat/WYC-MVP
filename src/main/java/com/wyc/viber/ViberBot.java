@@ -58,8 +58,8 @@ public class ViberBot {
 		}
 	}
 	
-	public void sendMenu(String to) throws IOException {
-		ViberKeyBoard keyboard = viberApi.createMainMenu();
+	public void sendMenu(Person.Role role, String to) throws IOException {
+		ViberKeyBoard keyboard = viberApi.createMainMenu(role);
 		viberApi.sendMessage(to, null, keyboard, null, "ЛихаЧат");
 	}
 
@@ -111,16 +111,20 @@ public class ViberBot {
 			String data = null;
 			if(incomingMessage.getText() != null) {
 				ObjectMapper mapper = new ObjectMapper();
-				ViberButtonActionBody actionBody = mapper.readValue(incomingMessage.getText(), ViberButtonActionBody.class);
-				if(actionBody.getBeanName() != null) {
-					data = actionBody.getBeanName() + "." + actionBody.getMethodName();
-					if(actionBody.getParams() != null) {
-						for(String p : actionBody.getParams()) {
-							data = data + "." + p;
+				try {
+					ViberButtonActionBody actionBody = mapper.readValue(incomingMessage.getText(), ViberButtonActionBody.class);
+					if(actionBody != null && actionBody.getBeanName() != null) {
+						data = actionBody.getBeanName() + "." + actionBody.getMethodName();
+						if(actionBody.getParams() != null) {
+							for(String p : actionBody.getParams()) {
+								data = data + "." + p;
+							}
 						}
+					} else {
+						
 					}
-				} else {
-					
+				} catch(IOException e) {
+					log.warn("Cannot parse '" + incomingMessage.getText() +"'");
 				}
 			}
 			if(data != null) {
@@ -140,6 +144,7 @@ public class ViberBot {
 					.viberId(sender.getId())
 					.lastName(sender.getName())
 					.avatar(sender.getAvatar())
+					.role(Person.Role.PEDESTRIAN)
 					.build();
 			personRepository.save(person);
 		}

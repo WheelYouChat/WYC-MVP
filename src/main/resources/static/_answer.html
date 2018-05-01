@@ -78,7 +78,8 @@
 	  		</div>
 -->
 	  		<h3>
-	  			Сообщение для автомобиля {{message.carNumberTo}} 
+	  			Сообщение для автомобиля <br> 
+	  			{{message.carNumberTo}} 
 	  		</h3>
 	  		<!-- 
 	  		<div style="position:relative;width:600px;"> 
@@ -100,13 +101,17 @@
 		  		<h4>Выберите вариант ответа и 
 		  		<br>
 		  		мы пошлем его отправителю</h4>
-		  		<div class="text-left" ng-class="{'has-error' : error.fieldName=='phone'}">
-  					<label for="phone">Последние 4 цифры вашего телефона</label>
-		  			<input type="text" name="phone" ng-model="phone" placeholder="1234" maxlength="4">
+		  		<div class="row justify-content-md-center">
+			  		<div class="text-left col-6" ng-class="{'has-error' : error.fieldName=='phone'}">
+	  					<label for="phone">Последние 4 цифры вашего телефона</label>
+			  			<input type="text" name="phone" ng-model="phone" placeholder="1234" maxlength="4">
+			  		</div>
 		  		</div>
-		  		<div class="text-left" ng-repeat="option in message.messageType.answers" >
-	  				<input type="radio" name="answer" ng-model="formData.answer" ng-value="option" id="option-{{option.name}}">
-  					<label for="option-{{option.name}}">{{option.title}}</label>
+		  		<div class="row justify-content-md-center" ng-repeat="option in message.messageType.answers">
+			  		<div class="text-left col-6">
+		  				<input type="radio" name="answer" ng-model="formData.answer" ng-value="option" id="option-{{option.name}}">
+	  					<label for="option-{{option.name}}">{{option.title}}</label>
+			  		</div>
 		  		</div>
 		  		<div ng-show="error" class="text-danger">
 		  			{{error.message}}
@@ -126,7 +131,6 @@
 		            <i class="fa fa-sign-in mr-2"></i>
               		Подключиться к ЛихаЧат
               	  </a>
-		  		
 		  	</div>
 	  		 
   		</div>

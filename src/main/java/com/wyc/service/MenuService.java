@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.wyc.annotation.BotMethod;
 import com.wyc.annotation.BotService;
+import com.wyc.db.model.Person.Role;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,18 +26,18 @@ public class MenuService {
 	@Autowired
 	private ApplicationContext applicationContext;
 
-	public List<Pair<String, Method>> getMenuMethods() {
-		List<Pair<String, Method>> botMethods = getBotMethods(BotMethod::mainMenu); 
+	public List<Pair<String, Method>> getMenuMethods(Role role) {
+		List<Pair<String, Method>> botMethods = getBotMethods(BotMethod::mainMenu, role); 
 		return botMethods;
 	}
 	
 	public List<Pair<String, Method>> getBackToMenuMethods() {
-		List<Pair<String, Method>> botMethods = getBotMethods(BotMethod::backToMainMenu); 
+		List<Pair<String, Method>> botMethods = getBotMethods(BotMethod::backToMainMenu, Role.PEDESTRIAN); 
 		return botMethods;
 	}
 
 
-	protected List<Pair<String, Method>> getBotMethods(Predicate<BotMethod> filter) {
+	protected List<Pair<String, Method>> getBotMethods(Predicate<BotMethod> filter, Role role) {
 		Map<String, Object> beans = applicationContext.getBeansWithAnnotation(BotService.class);
 		List<Pair<String, Method>> botMethods = new ArrayList<>(); 
 
@@ -50,7 +51,7 @@ public class MenuService {
 			for(Method m : methods) {
 				if(m.isAnnotationPresent(BotMethod.class)) {
 					BotMethod botMethodAnnotation = m.getAnnotation(BotMethod.class);
-					if(filter.test(botMethodAnnotation)) {
+					if(hasPermission(botMethodAnnotation, role) && filter.test(botMethodAnnotation)) {
 						botMethods.add(Pair.of(name, m));
 					}
 				}
@@ -69,5 +70,24 @@ public class MenuService {
 		}
 		return botMethods;
 		
+	}
+	
+	/**
+	 * Имеет ли пользователь право на данный метод?
+	 * @param botMethod
+	 * @param user
+	 * @return
+	 */
+	protected boolean hasPermission(BotMethod botMethod, Role role) {
+		if(botMethod.roles() == null || botMethod.roles().length == 0) {
+			// Метод доступен всем
+			return true;
+		}
+		for(Role r : botMethod.roles()) {
+			if(r == role) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -6,7 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Component
+@Slf4j
 public class AutoStart {
 
 	@Autowired
@@ -19,11 +22,10 @@ public class AutoStart {
 				viberBot.initialize();
 				
 				// TODO remove it
-				viberBot.sendMenu("sSPFZVqFK9BNhd4qFve6Rw==");
+				// viberBot.sendMenu("sSPFZVqFK9BNhd4qFve6Rw==");
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Error staring", viberBot);
 		}
 	}
 }

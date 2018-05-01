@@ -1,5 +1,6 @@
 package com.wyc.chat.validator;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -8,9 +9,17 @@ import java.util.regex.Pattern;
 import jersey.repackaged.com.google.common.collect.Lists;
 
 public class PlateValidator  extends BaseValidator<String>{
+	
+	// Допускать пустые номер (для пешеходов)
+	private boolean allowEmpty = false;
 
 	public PlateValidator() {
+		this(false);
+	}
+	
+	public PlateValidator(boolean allowEmpty) {
 		super(String.class);
+		this.allowEmpty = allowEmpty;
 	}
 
 	private static Pattern PATTERNS[] = new Pattern[]{
@@ -20,6 +29,9 @@ public class PlateValidator  extends BaseValidator<String>{
 	
 	@Override
 	public List<String> validate(String s) {
+		if(allowEmpty && s.trim().length() == 0) {
+			return new ArrayList<>();
+		}
 		// Remove spaces
 		s = s.replaceAll("[ ]+", "");
 		for(Pattern p : PATTERNS) {

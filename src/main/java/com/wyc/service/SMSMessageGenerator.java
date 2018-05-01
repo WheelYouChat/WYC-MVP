@@ -16,6 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class SMSMessageGenerator {
+	
+	public static final String SITE_URL = "l6t.ru";
+
 	public String generateSMSMessage(DriveMessageType messageType, Date when, String location, String code) {
 		location = location.replaceAll("\\bулица\\b", "ул");
 		location = location.replaceAll("\\bпроспект\\b", "пр");
@@ -34,27 +37,27 @@ public class SMSMessageGenerator {
 			h++;
 		}
 		String res = getLessThan70( 
-				messageType.getSms() + " в " + h +  "ч. место-" + location + ". Ответить LihaChat.ru/" + code,
-				messageType.getSms() + " в " + h +  "ч. место-" + location + ".Ответить LihaChat.ru/" + code,
-				messageType.getSms() + " в " + h +  "ч. место-" + location + ". Отв. LihaChat.ru/" + code,
-				messageType.getSms() + " в " + h +  "ч. место-" + location + ".Отв. LihaChat.ru/" + code,
-				messageType.getSms() + " в" + h +  "ч. место-" + location + ".Ответить LihaChat.ru/" + code,
-				messageType.getSms() + " в" + h +  "ч. место-" + location + ". Ответить LihaChat.ru/" + code,
-				messageType.getSms() + " в" + h +  "ч.место-" + location + ". Ответить LihaChat.ru/" + code,
-				messageType.getSms() + " в" + h +  "ч.место-" + location + ".Ответить LihaChat.ru/" + code,
-				messageType.getSms() + " в" + h +  "ч. место-" + location + ". Отв. LihaChat.ru/" + code,
-				messageType.getSms() + " в" + h +  "ч. место-" + location + ".Отв. LihaChat.ru/" + code,
-				messageType.getSms() + " в" + h +  "ч.место-" + location + ".Отв. LihaChat.ru/" + code,
-				messageType.getSms() + " в" + h +  "ч-" + location + ".Ответить LihaChat.ru/" + code,
-				messageType.getSms() + " в" + h +  "ч-" + location + ".Отв. LihaChat.ru/" + code,
-				messageType.getSms() + " место-" + location + ".Ответить LihaChat.ru/" + code,
-				messageType.getSms() + " место-" + location + ".Отв. LihaChat.ru/" + code,
-				messageType.getSms() + "-" + location + ".Ответить LihaChat.ru/" + code,
-				messageType.getSms() + "-" + location + ".Отв. LihaChat.ru/" + code,
-				messageType.getSms() + ".Ответить LihaChat.ru/" + code,
-				messageType.getSms() + ".Отв. LihaChat.ru/" + code,
-				messageType.getSms() + " LihaChat.ru/" + code,
-				messageType.getSms() + " LihaChat.ru"
+				messageType.getSms() + " в " + h +  "ч. адр-" + location + ". Ответить " + SITE_URL + "/" + code,
+				messageType.getSms() + " в " + h +  "ч. адр-" + location + ".Ответить " + SITE_URL + "/" + code,
+				messageType.getSms() + " в " + h +  "ч. адр-" + location + ". Отв. " + SITE_URL + "/" + code,
+				messageType.getSms() + " в " + h +  "ч. адр-" + location + ".Отв. " + SITE_URL + "/" + code,
+				messageType.getSms() + " в" + h +  "ч. адр-" + location + ".Ответить " + SITE_URL + "/" + code,
+				messageType.getSms() + " в" + h +  "ч. адр-" + location + ". Ответить " + SITE_URL + "/" + code,
+				messageType.getSms() + " в" + h +  "ч.адр-" + location + ". Ответить " + SITE_URL + "/" + code,
+				messageType.getSms() + " в" + h +  "ч.адр-" + location + ".Ответить " + SITE_URL + "/" + code,
+				messageType.getSms() + " в" + h +  "ч. адр-" + location + ". Отв. " + SITE_URL + "/" + code,
+				messageType.getSms() + " в" + h +  "ч. адр-" + location + ".Отв. " + SITE_URL + "/" + code,
+				messageType.getSms() + " в" + h +  "ч.адр-" + location + ".Отв. " + SITE_URL + "/" + code,
+				messageType.getSms() + " в" + h +  "ч-" + location + ".Ответить " + SITE_URL + "/" + code,
+				messageType.getSms() + " в" + h +  "ч-" + location + ".Отв. " + SITE_URL + "/" + code,
+				messageType.getSms() + " адр-" + location + ".Ответить " + SITE_URL + "/" + code,
+				messageType.getSms() + " адр-" + location + ".Отв. " + SITE_URL + "/" + code,
+				messageType.getSms() + "-" + location + ".Ответить " + SITE_URL + "/" + code,
+				messageType.getSms() + "-" + location + ".Отв. " + SITE_URL + "/" + code,
+				messageType.getSms() + ".Ответить " + SITE_URL + "/" + code,
+				messageType.getSms() + ".Отв. " + SITE_URL + "/" + code,
+				messageType.getSms() + " " + SITE_URL + "/" + code,
+				messageType.getSms() + " " + SITE_URL
 				);
 		log.info("res = " + res + " - " + res.length());
 		return res;

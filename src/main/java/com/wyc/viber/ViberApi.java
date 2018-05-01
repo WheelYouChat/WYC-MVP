@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.cfg.MapperConfig;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
 import com.wyc.WYCConfig;
 import com.wyc.annotation.BotMethod;
+import com.wyc.db.model.Person;
 import com.wyc.service.MenuService;
 import com.wyc.viber.ViberButton.ViberButtonActionType;
 import com.wyc.viber.ViberButtonActionBody.Event;
@@ -58,9 +59,10 @@ public class ViberApi {
 	public void setWebHook() throws IOException {
 		
 		if(!initialized) {
-			log.debug(config.getViber().getWebHookUrl());
+			String webhookUrl = config.getViber().getWebHookUrl();
+			log.debug(webhookUrl);
 	
-			 String json = "{\"url\":\"https://lihachat.ru/viber/webhook\", \"event_types\":[\"delivered\",\"seen\",\"failed\",\"subscribed\",\"unsubscribed\",\"conversation_started\"]}";
+			 String json = "{\"url\":\"" + webhookUrl + "\", \"event_types\":[\"delivered\",\"seen\",\"failed\",\"subscribed\",\"unsubscribed\",\"conversation_started\"]}";
 			 RequestBody body = RequestBody.create(MediaType.parse("text/json"), json);
 			 Response response = doRequest("/pa/set_webhook", body);
 			 String r = response.body().string();
@@ -124,7 +126,7 @@ public class ViberApi {
 		if(type == null) {
 			type = msg == null ? null : ViberMessageType.text;
 		}
-		if(keyboard != null && keyboard.getButtons() == null || keyboard.getButtons().length == 0) {
+		if(keyboard != null && (keyboard.getButtons() == null || keyboard.getButtons().length == 0)) {
 			keyboard = null;
 		}
 		ViberMessage message = ViberMessage.builder()
@@ -191,8 +193,8 @@ public class ViberApi {
 		return createMenu(menuMethods);
 	}
 	
-	public ViberKeyBoard createMainMenu() {
-		List<Pair<String, Method>> menuMethods = menuService.getMenuMethods();
+	public ViberKeyBoard createMainMenu(Person.Role role) {
+		List<Pair<String, Method>> menuMethods = menuService.getMenuMethods(role);
 		return createMenu(menuMethods);
 	}
 	
