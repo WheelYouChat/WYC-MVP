@@ -134,6 +134,14 @@
 		  	</div>
 	  		 
   		</div>
+  		<div ng-show="codeIsNotFound" class="alert alert-danger">
+  			<h3>
+  				Сообщение не найдено. 
+  			</h3>
+  			<p>
+  				Проверьте ссылку, возможно вы ошиблись.
+  			</p>
+  		</div>
   	</div>
   	
 
@@ -163,6 +171,8 @@ app.controller("answerCtrl", function($scope, $http) {
     $http.get('/api/messages/' + code).then(function(data){
     	console.log(data);
     	$scope.message = data.data;
+    }, function(error){
+    	$scope.codeIsNotFound = true;
     });
     var mapWidth = window.innerWidth;
     mapWidth = mapWidth > 400 ? 400 : mapWidth;
