@@ -203,10 +203,13 @@ public class WYCBotScheduledTask {
 	}
 
 	protected void deliveryViberMessages() {
+		log.info("Start delivery viber messages");
 		Iterable<DriveMessage> messages = driveMessageRepository.findByDeliveredIsFalseOrderByIdDesc();
 		for(DriveMessage message : messages) {
+			log.info("  found message.id = " + message.getId());
 			// if(message.getTo() != null && message.getTo().getTelegramId() != null && (message.getLongitude() == null || message.getLocationTitle() != null)) { // Странное условие- чтобы to было заполнено, закомментировал 31.03.18
 			if(message.getLongitude() == null || message.getLocationTitle() != null) {
+				log.info("  location of message.id = " + message.getId() + " is ok");
 				List<Person> persons = new ArrayList();
 				String carNumber = message.getCarNumberTo();
 				
@@ -220,9 +223,11 @@ public class WYCBotScheduledTask {
 					Set<Integer> personIds = cars.stream().filter(car -> {return car.getOwnerUserId() != null;}).map(Car::getOwnerUserId).collect(Collectors.toSet());
 					persons = personRepository.findByCarNumberOrIdIn(carNumber, personIds);
 				} else if(message.getTo() != null){
+					log.info("  message.id = " + message.getId() + " is sent directly to viber");
 					// Сообщение послали напрямую в Viber (ответили)
 					persons.add(message.getTo());
 				}
+				log.info("  message.id = " + message.getId() + " persons = " + persons);
 				for(Person person : persons) {
 					if(person.getViberId() != null && !personService.hasActiveContext(person)) {
 						ViberMessage sendMessage = new ViberMessage();
