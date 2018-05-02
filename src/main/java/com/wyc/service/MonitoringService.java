@@ -1,5 +1,7 @@
 package com.wyc.service;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,9 +27,13 @@ public class MonitoringService {
 	
 	public MonitoringInfo[] getMonitorInfos() {
 		MonitoringInfo[] res = new MonitoringInfo[wycConfig.getMonitoringConfigs().length];
-		for(int i = 0; i < res.length; i++) {
-			res[i] = getMonitorInfo(wycConfig.getMonitoringConfigs()[i]);
-		}
+		MonitoringConfig[] configs = wycConfig.getMonitoringConfigs();
+		List<MonitoringConfig> configList = Arrays.asList(configs);
+		configList.stream().parallel().forEach(mc -> {
+			MonitoringInfo info = getMonitorInfo(mc);
+			int idx = configList.indexOf(mc);
+			res[idx] = info;
+		});
 		return res;
 	}
 
@@ -76,7 +82,7 @@ public class MonitoringService {
     		} else {
     	    	res = MonitoringInfo.builder()
     	    			.state(State.ERROR)
-    	    			.message(response.body().toString())
+    	    			.message(response.body().string())
     	    			.build();
     			
     		}
