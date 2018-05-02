@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import com.wyc.avinfo.AVInfoConfig;
+import com.wyc.monitoring.MonitoringConfig;
 import com.wyc.telegram.WYCBot;
 import com.wyc.viber.ViberBotConfig;
 
@@ -26,5 +27,6 @@ public class WYCConfig {
 	private boolean viberDelivery;
 	private boolean smsDelivery;
 	private boolean webHook;
-	
+
+	private MonitoringConfig[] monitoringConfigs;
 }

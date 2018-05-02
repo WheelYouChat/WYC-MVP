@@ -18,11 +18,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.wyc.WYCConfig;
+import com.wyc.service.MonitoringService;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
@@ -35,6 +37,9 @@ public class MonitoringController {
 
 	@Autowired
 	private Environment environment;
+	
+	@Autowired
+	private MonitoringService monitoringService;
 	
 	@Autowired 
 	private WYCConfig wycConfig;
@@ -163,6 +168,13 @@ public class MonitoringController {
 				+ "  FROM drive_message_delivery dmd JOIN page_visit pv ON concat('/', dmd.code) = pv.url "
 				+ "  WHERE delivery_type = 'SMS' AND delivery_status = 'DELIVERED' AND sent_date >= ?"
 				+ ") AS t", new Object[]{firstDate}, Integer.class));
+		funnel.setAnswerSentFromAnswerPage(jdbcTemplate.queryForObject(""
+				+ "SELECT count(*) FROM ("
+				+ "  SELECT DISTINCT code "
+				+ "  FROM drive_message_delivery dmd JOIN page_visit pv ON concat('/', dmd.code) = pv.url "
+				+ "    JOIN drive_message dm ON dm.replied_to_id = dmd.id"
+				+ "  WHERE delivery_type = 'SMS' AND delivery_status = 'DELIVERED' AND sent_date >= ?"
+				+ ") AS t", new Object[]{firstDate}, Integer.class));
 		
 		funnel.setSubscribed(jdbcTemplate.queryForObject("SELECT count(*) FROM person WHERE registration_date >= ?", new Object[]{firstDate}, Integer.class));
 		funnel.setActiveSubscribers(jdbcTemplate.queryForObject(""
@@ -173,5 +185,22 @@ public class MonitoringController {
 				+ ") AS t", new Object[]{firstDate}, Integer.class));
 		return funnel;
 	}
+
+	@Data
+	@ToString
+	@Builder
+	public static class MonitoringInfo {
+		public static enum State {
+			OK, ERROR
+		}
+		private State state;
+		
+		private String message;
+	}
 	
+	@RequestMapping("monitor")
+	public MonitoringInfo[] monitor() {
+		MonitoringInfo[] res = monitoringService.getMonitorInfos();
+		return res;
+	}
 }
