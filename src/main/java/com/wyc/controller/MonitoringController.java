@@ -77,7 +77,8 @@ public class MonitoringController {
 	
 	@RequestMapping("/gitstatus")
 	public List<String> getGitStatus() throws IOException, InterruptedException {
-		return getCmdOutput("git fetch | git status");
+		getCmdOutput("git fetch");
+		return getCmdOutput("git status");
 	}
 	
 	@RequestMapping("/gitlog")
