@@ -107,11 +107,17 @@ task bot <<{
 }
 bot.finalizedBy bootRun
 
-// Таска для web ответов
-task web <<{
-	bootRun { systemProperty "spring.profiles.active", "web" }
+// Таска для web1 ответов
+task web1 <<{
+	bootRun { systemProperty "spring.profiles.active", "web1" }
 }
-web.finalizedBy bootRun
+web1.finalizedBy bootRun
+
+// Таска для web2 ответов
+task web2 <<{
+	bootRun { systemProperty "spring.profiles.active", "web2" }
+}
+web2.finalizedBy bootRun
 
 // Таска все в одном для разработки
 task allinone <<{
