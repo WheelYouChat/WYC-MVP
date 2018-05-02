@@ -87,8 +87,10 @@ public class ViberBot {
 				Optional<Person> senderOpt = personRepository.findByViberId(viberIncomingMessage.getSender().getId());
 				if(senderOpt.isPresent()) {
 					Person sender = senderOpt.get();
+					viberApi.sendMessage(sender.getViberId(), "Start status calculating", "Monitoring");
+					
 					MonitoringInfo[] infos = monitoringService.getMonitorInfos();
-					String message = Arrays.asList(infos).stream().map(MonitoringInfo::toString).collect(Collectors.joining("\n"));
+					String message = Arrays.asList(infos).stream().map(MonitoringInfo::toString).collect(Collectors.joining("\n\n"));
 					viberApi.sendMessage(sender.getViberId(), message, "Monitoring");
 					return;
 				}
