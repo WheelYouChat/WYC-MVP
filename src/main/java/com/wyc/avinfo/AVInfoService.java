@@ -30,8 +30,6 @@ public class AVInfoService {
 	private WYCConfig config;
 	
 	protected AVICar getRequest(String number) {
-		AVIRequest res = new AVIRequest();
-		
 		OkHttpClient client = new OkHttpClient();
 		
 		String url = config.getAvinfo().getUrl() + "/api.ashx?key=" + config.getAvinfo().getToken() + "&gosnomer=" + number;

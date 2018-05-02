@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -243,13 +244,15 @@ public class WYCBotScheduledTask {
 								.deliveryType(DeliveryType.VIBER)
 								.to(person)
 								.driveMessage(message)
+								.sentDate(new Date())
 								.build();
 
 						try {
 							ViberSentMessage sentMessage = viberApi.sendMessage(person.getViberId(), sendMessage, message.getFrom().getUserDesc());
 							messageDelivery.setSentMessageId(sentMessage.getMessage_token());
-
+							messageDelivery.setDeliveredDate(new Date());
 							message.setDelivered(true);
+							
 							driveMessageRepository.save(message);
 							// TODO redesing it - Нужно проставлять флаг delivered при получении асинхронного ответа
 						} catch (IOException e) {
@@ -370,7 +373,10 @@ public class WYCBotScheduledTask {
 	
 
 	protected void deliverySmsMessages() {
-		Iterable<DriveMessage> messages = driveMessageRepository.findByDeliveredIsFalseOrderByIdDesc();
+		// Берем сообщения за последние сутки
+		Date d = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1));
+		Iterable<DriveMessage> messages = driveMessageRepository.findByDeliveredIsFalseAndCreationDateGreaterThanOrderByIdDesc(d );
+
 		for(DriveMessage message : messages) {
 			if(message.getTo() == null && message.getCarNumberTo() != null && message.getLocationTitle() != null) {
 				// Адресат не подключен к системе

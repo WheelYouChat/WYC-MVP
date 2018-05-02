@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 // Автомобиль из системы AVInfo
 
@@ -20,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class AVICar {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)

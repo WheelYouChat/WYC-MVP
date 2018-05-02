@@ -7,6 +7,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jersey.repackaged.com.google.common.collect.Lists;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 public class PlateValidator  extends BaseValidator<String>{
 	
@@ -22,8 +26,10 @@ public class PlateValidator  extends BaseValidator<String>{
 		this.allowEmpty = allowEmpty;
 	}
 
+	private static final String CANONICAL_PLATE_REGEXP = "([а-яА-Я])([0-9][0-9][0-9])([а-яА-Я][а-яА-Я])([0-9][0-9][0-9]?)";
+	private static final Pattern CANONICAL_PLATE_PATTERN = Pattern.compile(CANONICAL_PLATE_REGEXP);
 	private static Pattern PATTERNS[] = new Pattern[]{
-			Pattern.compile("[а-яА-Я][0-9][0-9][0-9][а-яА-Я][а-яА-Я][0-9][0-9][0-9]?"),
+			CANONICAL_PLATE_PATTERN,
 			Pattern.compile("[0-9][0-9][0-9][а-яА-Я][а-яА-Я][а-яА-Я][0-9][0-9][0-9]?")
 	};
 	
@@ -68,4 +74,29 @@ public class PlateValidator  extends BaseValidator<String>{
 		return sb.toString();
 	}
 
+	@Getter
+	@AllArgsConstructor
+	@Builder
+	public static class Plate {
+		private final String letter1;
+		private final String letter23;
+		private final String digits;
+		private final String area;
+	}
+	
+	public static Plate parseNumber(String number) {
+		String s = processNumber(number);
+		Matcher m = CANONICAL_PLATE_PATTERN.matcher(s);
+		if(m.find()) {
+			Plate res = Plate.builder()
+				.letter1(m.group(1))
+				.digits(m.group(2))
+				.letter23(m.group(3))
+				.area(m.group(4))
+				.build();
+			return res;
+		} else {
+			throw new IllegalArgumentException("Can not parse number '" + number + "'");
+		}
+	}
 }

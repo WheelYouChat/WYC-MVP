@@ -37,7 +37,8 @@ public class DriveMessage {
 		
 		// Ответы на жалобы
 		SORRY              ("Извините", "Извините", GREEN, new Person.Role[0]),
-		SORRY_USUALLY_DO   ("Извините, обычно я так делаю", "Извините, обычно я так делаю", GREEN, new Person.Role[0]),
+		SORRY_USUALLY_DO   ("Извините, обычно я так и делаю", "Извините, обычно я так и делаю", GREEN, new Person.Role[0]),
+		SORRY_USUALLY_DONT ("Извините, обычно я так не делаю", "Извините, обычно я так не делаю", GREEN, new Person.Role[0]),
 		SORRY_HURRY        ("Извините, очень спешил", "Извините, очень спешил", GREEN, new Person.Role[0]),
 		SORRY_TRAFFIC      ("Извините, была пробка и не куда было деваться", "Извините, была пробка и не куда было деваться", GREEN, new Person.Role[0]),
 		SORRY_I_HAD_REASON ("Извините, но у меня были серьезные причины так поступить", "Извините, но у меня были серьезные причины так поступить", YELLOW, new Person.Role[0]),
@@ -51,24 +52,27 @@ public class DriveMessage {
 		
 		//                     123456789012345678901234567890
 		// Жалобы от водителей (иногда пешеходов
-		CUT_OFF              ("Вы меня подрезали",         "Вы меня подрезали", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
+		CUT_OFF              ("Вы меня подрезали",         "Вы меня подрезали", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
 		CUT_OFF_SORRY        ("Извините,что подрезал",     "Извините, что подрезал", GREEN, new Person.Role[]{Role.DRIVER, Role.ADMIN}, APOLOGY_ACCEPTED, APOLOGY_ACCEPTED_BUT_IT_WAS_DANGEROUS, I_WAS_NOT_THERE),
 		THANKS_GIVE_WAY      ("Спасибо,за проезд",         "Спасибо, что уступили дорогу", GREEN, new Person.Role[]{Role.DRIVER, Role.ADMIN}, PLEASE, I_WAS_NOT_THERE),
-		DANGEROUS_DRIVING    ("Вы опасно ехали",           "Вы создавали опасные ситуации на дороге для других водителей", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
-		BROKE_RULES          ("Вы нарушили ПДД",           "Вы нарушили правила дорожного движения", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
+		DANGEROUS_DRIVING    ("Вы опасно ехали",           "Вы создавали опасные ситуации на дороге для других водителей", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
+		BROKE_RULES          ("Вы нарушили ПДД",           "Вы нарушили правила дорожного движения", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT,SORRY_HURRY, I_WAS_NOT_THERE),
 		DID_NOT_GIVE_WAY     ("Вы не уступили дорогу",     "Вы мне не уступили дорогу", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_HURRY, I_DONT_HAVE_TO_GIVE_WAY, I_WAS_NOT_THERE),
-		WRONG_PARKING        ("Вы плохо припаркованы",     "Ваша машина неправильно припаркована", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_HURRY, CAR_IS_NOT_THERE),
-		BLOCK_PARKING        ("Вы меня блокировали",       "Ваша машина заблокировала мне выезд", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_HURRY, CAR_IS_NOT_THERE),
-		LOUD_SIGNAL          ("Вы громко сигналили",       "Вы очень громко сигналили, без явной необходимости", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
-		USE_TURN_LIGHT       ("Включайте поворотник",      "Вы не использовали указатель поворота при перестроении или повороте, прошу используйте его", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DO, I_WAS_NOT_THERE),
-		USE_TURN_LIGHT_PARK  ("Включайте поворотник",      "Вы парковались и не использовали указатель поворотов, прошу используйте его когда ищете парковку или паркуетесь", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DO, I_WAS_NOT_THERE),
+		WRONG_PARKING        ("Вы плохо припаркованы",     "Ваша машина неправильно припаркована", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, CAR_IS_NOT_THERE),
+		BLOCK_PARKING        ("Вы меня блокировали",       "Ваша машина заблокировала мне выезд", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, CAR_IS_NOT_THERE),
+		LOUD_SIGNAL          ("Вы громко сигналили",       "Вы очень громко сигналили, без явной необходимости", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
+		USE_TURN_LIGHT       ("Включайте поворотник",      "Вы не использовали указатель поворота при перестроении или повороте, прошу используйте его", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT, I_WAS_NOT_THERE),
+		USE_TURN_LIGHT_PARK  ("Включайте поворотник",      "Вы парковались и не использовали указатель поворотов, прошу используйте его когда ищете парковку или паркуетесь", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT, I_WAS_NOT_THERE),
+		DONT_BLOCK_VIEW_180  ("Вы блокировали мне обзор",  "Мы разворачивались и вы встали справа от меня вторым рядом, заблокировав мне обзор. Пожалуйста, не делайте так, это мешает другим участникам движения.", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
+		DONT_BLOCK_VIEW_RIGHT("Вы блокировали мне обзор",  "Мы поворачивали направо и вы встали слева от меня вторым рядом, заблокировав мне обзор. Пожалуйста, не делайте так, это мешает другим участникам движения.", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
+		DONT_BLOCK_VIEW_LEFT ("Вы блокировали мне обзор",  "Мы поворачивали налево и вы встали справа от меня вторым рядом, заблокировав мне обзор. Пожалуйста, не делайте так, это мешает другим участникам движения.", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
 
 		
 		GOOD_MUSIC           ("Класс.песня из вашего авто","Мне понравилась музыка, которая звучала из вашего автомобиля", GREEN, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, GLAD_MUSIC_IS_OK, I_WAS_NOT_THERE),
 		
 		// Жалобы от пешеходов
-		PED_DID_NOT_GIVE_WAY("Вы не пропустили пешехода",  "Вы не пропустили пешехода на пешеходном переходе", RED, new Person.Role[]{Role.PEDESTRIAN, Role.DRIVER, Role.ADMIN}, SORRY, SORRY_HURRY, I_WAS_NOT_THERE),
-		PED_BLOCK_CROSSWALK ("Блокировали переход",        "Вы блокировали пешеходный переход или проход пешеходов", RED, new Person.Role[]{Role.PEDESTRIAN, Role.DRIVER, Role.ADMIN}, SORRY, SORRY_TRAFFIC, I_WAS_NOT_THERE),
+		PED_DID_NOT_GIVE_WAY("Вы не пропустили пешехода",  "Вы не пропустили пешехода на пешеходном переходе", RED, new Person.Role[]{Role.PEDESTRIAN, Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
+		PED_BLOCK_CROSSWALK ("Блокировали переход",        "Вы блокировали пешеходный переход или проход пешеходов", RED, new Person.Role[]{Role.PEDESTRIAN, Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_TRAFFIC, I_WAS_NOT_THERE),
 		
 		
 		;

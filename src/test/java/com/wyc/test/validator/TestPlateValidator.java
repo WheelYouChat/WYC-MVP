@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.junit.Test;
 
 import com.wyc.chat.validator.PlateValidator;
+import com.wyc.chat.validator.PlateValidator.Plate;
 
 import junit.framework.TestCase;
 
@@ -61,6 +62,11 @@ public class TestPlateValidator extends TestCase{
 			String number = PROCESS_EXAMPLES[i];
 			String actual = PROCESS_EXAMPLES[i + 1];
 			assertEquals(PlateValidator.processNumber(number), actual);
+			Plate parsed = PlateValidator.parseNumber(number);
+			assertEquals(parsed.getLetter1().length(), 1);
+			assertEquals(parsed.getDigits().length(), 3);
+			assertEquals(parsed.getLetter23().length(), 2);
+			assertEquals(parsed.getLetter1() + parsed.getDigits() + parsed.getLetter23() + parsed.getArea(), actual);
 		}
 	}
 }

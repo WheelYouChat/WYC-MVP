@@ -268,7 +268,7 @@ public class AnswerService {
 					if(contextIsReady(personContext, method)) {
 						invoke(bm.getBean(), personContext, method, null);
 					} else {
-						ViberMessage sendMessage = getNextQuestion(personContext, method);
+						ViberMessage sendMessage = getNextQuestion(personContext, method, null);
 	
 						// sendMessage.setChatId(user.getTelegramId().toString());
 	
@@ -415,9 +415,11 @@ public class AnswerService {
 					if(!errors.isEmpty()) {
 						// Value is incorrect 
 						String errorMessage = createErrorMessage(errors);
-						ViberMessage sendMessage = new ViberMessage();
+						ViberMessage sendMessage = getNextQuestion(pc, method, errorMessage);
 						
-						sendMessage.setText(errorMessage);
+						// ViberMessage sendMessage = new ViberMessage();
+						
+						// sendMessage.setText(errorMessage);
 
 						try {
 							viberApi.sendMessage(pc.getPerson().getViberId(), sendMessage, "ЛихаЧат");
@@ -496,7 +498,7 @@ public class AnswerService {
 						if(contextIsReady(pcNew, method)) {
 							invoke(bm.getBean(), pcNew, method, replyToMessageId);
 						} else {
-							ViberMessage sendMessage = getNextQuestion(pcNew, method);
+							ViberMessage sendMessage = getNextQuestion(pcNew, method, null);
 							// sendMessage.setChatId(chatId);
 	
 							try {
@@ -694,7 +696,7 @@ public class AnswerService {
 	}
 
 	
-	private ViberMessage getNextQuestion(PersonContext personContext, Method method) {
+	private ViberMessage getNextQuestion(PersonContext personContext, Method method, String errorMessage) {
 		Annotation[][] paramsAnnotations = method.getParameterAnnotations();
 		
 		ContextItem[] items = new ContextItem[paramsAnnotations.length];
@@ -715,7 +717,7 @@ public class AnswerService {
 					}
 				}
 				ViberMessage sendMessage = new ViberMessage();
-				sendMessage.setText(title);
+				sendMessage.setText((errorMessage == null ? "" : errorMessage + "\n") + title);
 				if(paramType == Location.class) {
 					/*
 					List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
@@ -820,8 +822,17 @@ public class AnswerService {
 			// Check location
 			Class<?> paramType = paramTypes[idx];
 			if(paramType == Location.class) {
-				if(location == null) {
-					res.add("Пришлите точку на карте (геопозицию)"); 
+				if(location == null || location.getLatitude() == null) {
+					res.add("Пришлите точку на карте (у вас в меню есть пункт \"Отправить местопложение\")"); 
+				}
+			}
+			if(paramType.isEnum()) {
+				Optional<?> eOpt = Arrays.asList(paramType.getEnumConstants()).stream().filter(o -> {
+					Enum e = (Enum) o;
+					return ("-" + e.name()).equals(text);
+				}).findFirst();
+				if(!eOpt.isPresent()) {
+					res.add("Выберите вариант из списка внизу экрана."); 
 				}
 			}
 		}
