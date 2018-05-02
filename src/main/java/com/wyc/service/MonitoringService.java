@@ -82,7 +82,7 @@ public class MonitoringService {
     		} else {
     	    	res = MonitoringInfo.builder()
     	    			.state(State.ERROR)
-    	    			.message(response.body().string())
+    	    			.message("URL = '" + url + "'\n" + response.body().string())
     	    			.build();
     			
     		}
@@ -90,7 +90,7 @@ public class MonitoringService {
 	    	log.error("Error monitoring url = '" + url + "'", e);
 	    	res = MonitoringInfo.builder()
 	    			.state(State.ERROR)
-	    			.message(e.getMessage())
+	    			.message("URL = '" + url + "'\n" + e.getMessage())
 	    			.build();
 	    }
 
