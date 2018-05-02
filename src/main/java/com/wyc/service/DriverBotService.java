@@ -113,9 +113,9 @@ public class DriverBotService {
 	
 	@BotMethod(title="Послать сообщение другому водителю", successMessage="Ваше сообщение будет отослано.", order = -1000, mainMenu=true)
 	public void sendMessage(
+			@BotMethodParam(title="Номер автомобиля (кому хотите послать сообщение)", validators=PlateValidator.class) String number, 
 			@BotMethodParam(title="Выберите сообщение") DriveMessageType messageType,
 			
-			@BotMethodParam(title="Номер автомобиля (кому хотите послать сообщение)", validators=PlateValidator.class) String number, 
 			// @BotMethodParam(title="Введите сообщение") String message,
 			@BotMethodParam(title="Укажите место где произошло") Location location,
 			@BotUser String currentUserId) {
