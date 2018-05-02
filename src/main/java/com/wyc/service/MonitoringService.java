@@ -61,7 +61,7 @@ public class MonitoringService {
     						isOk = false;
                 	    	res = MonitoringInfo.builder()
                 	    			.state(State.ERROR)
-                	    			.message("Cannot find re = '" + re + "' in \n" + body)
+                	    			.message("URL = " + url + "\nCannot find re = '" + re + "' in \n" + body)
                 	    			.build();
                 	    	break;
     					}

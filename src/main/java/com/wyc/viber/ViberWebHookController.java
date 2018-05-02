@@ -31,10 +31,15 @@ public class ViberWebHookController {
 	@RequestMapping(path ="/webhook", method=RequestMethod.GET)
 	public String viberWebHookGet(@RequestParam(name="monitor", required=false, defaultValue="false") boolean monitor) throws IOException {
 		log.info("viberWebHookGet monitor=" + monitor);
+		
+		// Для мониторинга- используем ?monitor=true чтобы получить список активных профилей, которые на DEV машине редко бывают
+		// viberwebhook - а значит мы можем контролировать что если viberwebhook нет в ответе по url /viber/webhook?monitor=true 
+		// значит что-то не в порядке
 		if(monitor) {
 			ObjectMapper objectMapper = new ObjectMapper();
 			return objectMapper.writeValueAsString(environment.getActiveProfiles()); 
 		}
+		
 		viberBot.onMessageReceive("{}");
 		return "0";
 	}

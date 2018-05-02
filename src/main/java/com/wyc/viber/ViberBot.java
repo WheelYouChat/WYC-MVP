@@ -3,24 +3,30 @@ package com.wyc.viber;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
+import org.springframework.data.util.StreamUtils;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wyc.annotation.BotMethod;
+import com.wyc.controller.MonitoringController.MonitoringInfo;
 import com.wyc.db.model.IncomingMessage;
 import com.wyc.db.model.Person;
+import com.wyc.db.model.Person.Role;
 import com.wyc.db.repository.IncomingMessageRepository;
 import com.wyc.db.repository.PersonRepository;
 import com.wyc.service.AnswerService;
 import com.wyc.service.MenuService;
+import com.wyc.service.MonitoringService;
 import com.wyc.viber.ViberButton.ViberButtonActionType;
 import com.wyc.viber.ViberButtonActionBody.Event;
 import com.wyc.viber.ViberKeyBoard.ViberKeyBoardType;
@@ -37,6 +43,9 @@ public class ViberBot {
 	
 	@Autowired
 	private MenuService menuService;
+	
+	@Autowired
+	private MonitoringService monitoringService;
 	
 	@Autowired
 	private PersonRepository personRepository;
@@ -72,6 +81,18 @@ public class ViberBot {
 					// Такое сообщение уже приходило
 					return;
 				}
+			}
+			// Сервисное сообщение
+			if(viberIncomingMessage != null && "status".equalsIgnoreCase(viberIncomingMessage.getMessage().getText())) {
+				Optional<Person> senderOpt = personRepository.findByViberId(viberIncomingMessage.getSender().getId());
+				if(senderOpt.isPresent()) {
+					Person sender = senderOpt.get();
+					MonitoringInfo[] infos = monitoringService.getMonitorInfos();
+					String message = Arrays.asList(infos).stream().map(MonitoringInfo::toString).collect(Collectors.joining("\n"));
+					viberApi.sendMessage(sender.getViberId(), message, "Monitoring");
+					return;
+				}
+				
 			}
 		} catch(Exception e) { 
 		}	
