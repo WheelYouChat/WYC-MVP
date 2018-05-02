@@ -194,6 +194,9 @@ public class MonitoringController {
 		public static enum State {
 			OK, ERROR
 		}
+		
+		private String title;
+		
 		private State state;
 		
 		private String message;

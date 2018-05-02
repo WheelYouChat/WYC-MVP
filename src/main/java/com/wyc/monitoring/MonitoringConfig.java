@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MonitoringConfig {
+	private String title;
 	private String url;
 	private String[] regexps;
 }
