@@ -13,6 +13,11 @@ import com.wyc.controller.MonitoringController.MonitoringInfo;
 import com.wyc.controller.MonitoringController.MonitoringInfo.State;
 import com.wyc.monitoring.MonitoringConfig;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -25,7 +30,22 @@ public class MonitoringService {
 	@Autowired
 	private WYCConfig wycConfig;
 	
-	public MonitoringInfo[] getMonitorInfos() {
+	@Data
+	@ToString
+	@Builder
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class MonitorStatus {
+		private MonitoringInfo[] infos;
+		public long getErrorCount() {
+			return Arrays.asList(infos).stream().filter(info -> {return info.getState() == State.ERROR;}).count();
+		}
+		public State getTotalState() {
+			return getErrorCount() == 0 ? State.OK : State.ERROR;
+		}
+	}
+	
+	public MonitorStatus getMonitorInfos() {
 		MonitoringInfo[] res = new MonitoringInfo[wycConfig.getMonitoringConfigs().length];
 		MonitoringConfig[] configs = wycConfig.getMonitoringConfigs();
 		List<MonitoringConfig> configList = Arrays.asList(configs);
@@ -34,7 +54,7 @@ public class MonitoringService {
 			int idx = configList.indexOf(mc);
 			res[idx] = info;
 		});
-		return res;
+		return MonitorStatus.builder().infos(res).build();
 	}
 
 	protected MonitoringInfo getMonitorInfo(MonitoringConfig monitoringConfig) {

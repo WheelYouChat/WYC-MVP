@@ -27,6 +27,7 @@ import com.wyc.db.repository.PersonRepository;
 import com.wyc.service.AnswerService;
 import com.wyc.service.MenuService;
 import com.wyc.service.MonitoringService;
+import com.wyc.service.MonitoringService.MonitorStatus;
 import com.wyc.viber.ViberButton.ViberButtonActionType;
 import com.wyc.viber.ViberButtonActionBody.Event;
 import com.wyc.viber.ViberKeyBoard.ViberKeyBoardType;
@@ -89,8 +90,11 @@ public class ViberBot {
 					Person sender = senderOpt.get();
 					viberApi.sendMessage(sender.getViberId(), "Start status calculating", "Monitoring");
 					
-					MonitoringInfo[] infos = monitoringService.getMonitorInfos();
-					String message = Arrays.asList(infos).stream().map(MonitoringInfo::toString).collect(Collectors.joining("\n\n"));
+					MonitorStatus infos = monitoringService.getMonitorInfos();
+					String message = Arrays.asList(infos.getInfos()).stream().map(MonitoringInfo::toString).collect(Collectors.joining("\n\n")) +
+							"\nTotal state : " + infos.getTotalState() + 
+							"\nErors count : " + infos.getErrorCount()
+							;
 					viberApi.sendMessage(sender.getViberId(), message, "Monitoring");
 					return;
 				}

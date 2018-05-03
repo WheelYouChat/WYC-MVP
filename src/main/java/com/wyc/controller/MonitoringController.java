@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.wyc.WYCConfig;
 import com.wyc.service.MonitoringService;
+import com.wyc.service.MonitoringService.MonitorStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -203,8 +204,8 @@ public class MonitoringController {
 	}
 	
 	@RequestMapping("monitor")
-	public MonitoringInfo[] monitor() {
-		MonitoringInfo[] res = monitoringService.getMonitorInfos();
+	public MonitorStatus monitor() {
+		MonitorStatus res = monitoringService.getMonitorInfos();
 		return res;
 	}
 }

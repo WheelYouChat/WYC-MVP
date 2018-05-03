@@ -247,6 +247,18 @@
 				ему проявить грубость или неуважение.
         	
         	</p>
+        	<h5 class="types2 invisible2">
+        		Какие сообщения я могу послать?
+        	</h5>
+        	<div>
+        	<p class="types2 invisible2 lead">
+        		Сейчас у нас доступны вот такие сообщения: 
+        	</p>
+        	<div class="row">
+        	<ul id="types" class="types2 invisible2 row3">
+        	</ul>
+        	</div>
+        	</div>
         </div>
       </div>
     </section>
@@ -299,6 +311,20 @@
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
+<script type="text/javascript">
+$(document).ready(function (){
+	$.get("/api/message-types", function(types){
+		console.log(types);
+		for(var i = 0; i < types.length; i++) {
+			var type = types[i];
+			// $("#types").append("<p class='alert alert-primary col-md-3 col-sm-6 col-12 ml-5' style='background-color:" + type.color + "'>" + type.title + "</p>")
+			// $("#types").append("<li class='lead' class2='col-md-3 col-sm-6 col-12 ml-5' style='border-left: solid " + type.color + " 5px;'>" + type.title + "</li>")
+			$("#types").append("<li class='lead' style='color:" + type.color + ";font-size:30px;'><span style='color:black;font-size:20px;'>" + type.title + "</span></li>")
+		}
+		$(".types").toggleClass("invisible");
+	})
+});
+</script>
 
   </body>
 

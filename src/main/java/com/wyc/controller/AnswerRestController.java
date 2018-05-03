@@ -1,9 +1,13 @@
 package com.wyc.controller;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.glassfish.hk2.api.Immediate;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.common.collect.ImmutableMap;
 import com.wyc.db.model.DriveMessage;
 import com.wyc.db.model.DriveMessage.DriveMessageType;
 import com.wyc.db.model.DriveMessageDelivery;
@@ -129,5 +134,17 @@ public class AnswerRestController extends ExceptionHandlerController {
 	public Integer testSms() throws IOException {
 		sender.sendMessage("79112127484", "Привет от lihachat.ru/39");
 		return 0;
+	}
+	
+	@RequestMapping("/api/message-types")
+	public List<Map<String, String>> getMessageTypes() {
+		List<Map<String, String>> res = Arrays.asList(DriveMessage.DriveMessageType.values()).stream()
+		.filter(DriveMessageType::isRootMenu)
+		.map(t -> {return ImmutableMap.<String, String>builder()
+				.put("title", t.getTitle())
+				.put("color", t.getColor())
+				.build();})
+				.collect(Collectors.toList());
+		return res;
 	}
 }
