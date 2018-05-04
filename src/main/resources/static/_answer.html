@@ -99,8 +99,6 @@
 	  		<div>{{message.message}}</div>
 	  		<div>Место: {{message.locationTitle}}</div>
 	  		<div>Время: {{message.creationDate | date : 'dd-MM-yy HH:mm'}}</div>
-	  		<img ng-src="https://static-maps.yandex.ru/1.x/?ll={{message.longitude}},{{message.latitude}}&pt={{message.longitude}},{{message.latitude}},pmwtl&l=map&z=14&size={{mapWidth}},{{mapHeight}}"
-	  		width="{{mapWidth}}" height="{{mapHeight}}" alt="Место, где все произошло"/>
 	  		
 	  		<div ng-show="message.answer == null && message.messageType.answers.length > 0" class="text-center">
 		  		<h4>Выберите вариант ответа и 
@@ -139,6 +137,8 @@
               		Подключиться к ЛихаЧат
               	  </a>
 		  	</div>
+	  		<img ng-src="https://static-maps.yandex.ru/1.x/?ll={{message.longitude}},{{message.latitude}}&pt={{message.longitude}},{{message.latitude}},pmwtl&l=map&z=14&size={{mapWidth}},{{mapHeight}}"
+	  		width="{{mapWidth}}" height="{{mapHeight}}" alt="Место, где все произошло"/>
 	  		 
   		</div>
   		<div ng-show="codeIsNotFound" class="alert alert-danger">
