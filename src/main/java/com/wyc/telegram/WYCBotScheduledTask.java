@@ -186,7 +186,7 @@ public class WYCBotScheduledTask {
 	@Scheduled(fixedRate=12000) // 2 min
 	protected void clearViberContexts() {
 		if(wycConfig.isViberDelivery()) {
-			Date lastActivityDate = new Date(System.currentTimeMillis() - 1000 * 60 * 1);
+			Date lastActivityDate = new Date(System.currentTimeMillis() - 1000 * 60 * 10);
 			List<PersonContext> contexts = personContextRepository.findByLastActivityDateLessThan(lastActivityDate);
 			for(PersonContext ctx : contexts) {
 				Person p = ctx.getPerson();
