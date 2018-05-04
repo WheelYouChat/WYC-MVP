@@ -249,7 +249,7 @@ public class WYCBotScheduledTask {
 									.build();
 	
 							try {
-								ViberSentMessage sentMessage = viberApi.sendMessage(person.getViberId(), sendMessage, message.getFrom().getUserDesc());
+								ViberSentMessage sentMessage = viberApi.sendMessage(person.getViberId(), sendMessage, (message.getFrom() != null ? message.getFrom().getUserDesc() : "Незарегистрированный пользователь"));
 								messageDelivery.setSentMessageId(sentMessage.getMessage_token());
 								messageDelivery.setDeliveredDate(new Date());
 								message.setDelivered(true);
