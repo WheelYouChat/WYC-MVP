@@ -134,7 +134,7 @@ public class AnswerService {
 			dialog.setCreationDate(m.getCreationDate());
 			
 			DialogPerson cutter =  new DialogPerson();
-			cutter.setNumber(m.getCarNumberTo());
+			cutter.setNumber(m.getCarNumberTo().toUpperCase());
 			dialog.setCutter(cutter);
 			res.add(dialog );
 		}

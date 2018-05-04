@@ -61,6 +61,7 @@ public class AVInfoDaemon {
 				// Берем недоставленные сообщения
 				for(DriveMessage message : messages) {
 					String carNumber = message.getCarNumberTo();
+					carNumber = carNumber.toUpperCase();
 					if(acceptedToFind(carNumber)) {
 						
 						// Сначала проверяем, может такой человек уже есть с Viber account-ом
