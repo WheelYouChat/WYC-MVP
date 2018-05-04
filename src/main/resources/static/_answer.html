@@ -102,15 +102,15 @@
 		  		<br>
 		  		мы пошлем его отправителю</h4>
 		  		<div class="row justify-content-md-center">
-			  		<div class="text-left col-6" ng-class="{'has-error' : error.fieldName=='phone'}">
+			  		<div class="text-left col-6 ml-4" ng-class="{'has-error' : error.fieldName=='phone'}">
 	  					<label for="phone">Последние 4 цифры вашего телефона</label>
-			  			<input type="text" name="phone" ng-model="phone" placeholder="1234" maxlength="4">
+			  			<input type="text" name="phone" ng-model="phone" placeholder="1234" maxlength="4" class="form-control">
 			  		</div>
 		  		</div>
-		  		<div class="row justify-content-md-center" ng-repeat="option in message.messageType.answers">
-			  		<div class="text-left col-6">
-		  				<input type="radio" name="answer" ng-model="formData.answer" ng-value="option" id="option-{{option.name}}">
-	  					<label for="option-{{option.name}}">{{option.title}}</label>
+		  		<div class="row justify2-content-md-center" ng-repeat="option in message.messageType.answers">
+			  		<div class="text-left ml-4 col-6">
+		  				<input type="radio" name="answer" ng-model="formData.answer" ng-value="option" id="option-{{option.name}}" class="form-check-input">
+	  					<label for="option-{{option.name}}"  class="form-check-label">{{option.title}}</label>
 			  		</div>
 		  		</div>
 		  		<div ng-show="error" class="text-danger">

@@ -52,9 +52,13 @@ public class DriveMessage {
 		
 		//                     123456789012345678901234567890
 		// Жалобы от водителей (иногда пешеходов
-		CUT_OFF              ("Вы меня подрезали",         "Вы меня подрезали", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
-		CUT_OFF_SORRY        ("Извините,что подрезал",     "Извините, что подрезал", GREEN, new Person.Role[]{Role.DRIVER, Role.ADMIN}, APOLOGY_ACCEPTED, APOLOGY_ACCEPTED_BUT_IT_WAS_DANGEROUS, I_WAS_NOT_THERE),
 		THANKS_GIVE_WAY      ("Спасибо,за проезд",         "Спасибо, что уступили дорогу", GREEN, new Person.Role[]{Role.DRIVER, Role.ADMIN}, PLEASE, I_WAS_NOT_THERE),
+		CUT_OFF_SORRY        ("Извините,что подрезал",     "Извините, что подрезал", GREEN, new Person.Role[]{Role.DRIVER, Role.ADMIN}, APOLOGY_ACCEPTED, APOLOGY_ACCEPTED_BUT_IT_WAS_DANGEROUS, I_WAS_NOT_THERE),
+		GOOD_MUSIC           ("Класс.песня из вашего авто","Мне понравилась музыка, которая звучала из вашего автомобиля", GREEN, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, GLAD_MUSIC_IS_OK, I_WAS_NOT_THERE),
+
+		CUT_OFF              ("Вы меня подрезали",         "Вы меня подрезали", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
+		TURN_RIGHT_WRONG_LANE("Вы повернули вторым рядом", "Вы нарушили ПДД, повернув направо из неправильного ряда", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
+		TURN_LEFT_WRONG_LANE ("Вы повернули вторым рядом", "Вы нарушили ПДД, повернув налево из неправильного ряда", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
 		DANGEROUS_DRIVING    ("Вы опасно ехали",           "Вы создавали опасные ситуации на дороге для других водителей", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
 		BROKE_RULES          ("Вы нарушили ПДД",           "Вы нарушили правила дорожного движения", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT,SORRY_HURRY, I_WAS_NOT_THERE),
 		DID_NOT_GIVE_WAY     ("Вы не уступили дорогу",     "Вы мне не уступили дорогу", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_HURRY, I_DONT_HAVE_TO_GIVE_WAY, I_WAS_NOT_THERE),
@@ -68,7 +72,6 @@ public class DriveMessage {
 		DONT_BLOCK_VIEW_LEFT ("Вы блокировали мне обзор",  "Мы поворачивали налево и вы встали справа от меня вторым рядом, заблокировав мне обзор. Пожалуйста, не делайте так, это мешает другим участникам движения.", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
 
 		
-		GOOD_MUSIC           ("Класс.песня из вашего авто","Мне понравилась музыка, которая звучала из вашего автомобиля", GREEN, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, GLAD_MUSIC_IS_OK, I_WAS_NOT_THERE),
 		
 		// Жалобы от пешеходов
 		PED_DID_NOT_GIVE_WAY("Вы не пропустили пешехода",  "Вы не пропустили пешехода на пешеходном переходе", RED, new Person.Role[]{Role.PEDESTRIAN, Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
