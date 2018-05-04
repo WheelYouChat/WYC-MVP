@@ -403,7 +403,23 @@ public class WYCBotScheduledTask {
 							try {
 								String code = codeGenerator.generateUniqueString();
 								String text = "" + smsMessageGenerator.generateSMSMessage(message.getMessageType(), message.getCreationDate(), message.getLocationTitle(), code);
-								String smsSentResponse = smsSender.sendMessage(phoneNumber, text);
+								
+								String smsSentResponse = null;
+								DeliveryStatus deliveryStatus = null;
+								boolean completed = false;
+								
+								if(phoneNumber.length() == 10) {
+									phoneNumber = "7" + phoneNumber;
+								}
+								
+								if(phoneNumber.startsWith("7495")) {
+									// На городской номер не посылаем
+									deliveryStatus = DeliveryStatus.ERROR;
+									completed = true;
+									
+								} else {
+									smsSentResponse = smsSender.sendMessage(phoneNumber, text);
+								}
 								
 								messageDelivery = DriveMessageDelivery.builder()
 										.sentDate(new Date())
@@ -412,6 +428,8 @@ public class WYCBotScheduledTask {
 										.driveMessage(message)
 										.deliveryType(DeliveryType.SMS)
 										.phoneNumber(phoneNumber)
+										.deliveryStatus(deliveryStatus)
+										.completed(completed)
 										.build();
 								message.setDelivered(true);
 								message.setSmsMessage(text);

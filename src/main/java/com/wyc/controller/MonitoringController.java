@@ -156,7 +156,7 @@ public class MonitoringController {
 				+ ") AS t", new Object[]{firstDate}, Integer.class));
 		
 		funnel.setPhoneNumbersFound(jdbcTemplate.queryForObject(""
-				+ "SELECT count(*) FROM avicar WHERE creation_date  >= ? and phone_number is not null", new Object[]{firstDate}, Integer.class));
+				+ "SELECT count(*) FROM avicar WHERE creation_date  >= ? and phone_number is not null and phone_number is not like '7495%'", new Object[]{firstDate}, Integer.class));
 		
 		funnel.setSmsMessagesSent(jdbcTemplate.queryForObject(""
 				+ "SELECT count(*) FROM drive_message_delivery WHERE delivery_type = 'SMS' AND sent_date >= ?", new Object[]{firstDate}, Integer.class));
