@@ -211,6 +211,9 @@ public class DriverBotService {
 		log.info("showProfile");
 		StringBuilder sb = new StringBuilder();
 		Person user = personRepository.findByViberId(currentUserId).orElseThrow(() -> new ResourceNotFoundException("Can not find person by viber id = '" + currentUserId + "'"));
+		if(user.getRole() == Role.ADMIN) {
+			sb.append("ID = " + user.getId() + "\n");
+		}
 		sb.append("Ник: " + ObjectUtils.firstNonNull(user.getNickname(), "<НД>") + "\n");
 		sb.append("Машина: " + ObjectUtils.firstNonNull(user.getCarName(), "<НД>") + "\n");
 		sb.append("Номер: " + ObjectUtils.firstNonNull(user.getCarNumber(), "<НД>") + "\n");
