@@ -15,15 +15,20 @@
 
     <!-- Custom fonts for this template -->
     <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <!-- 
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+     -->
 
     <!-- Plugin CSS -->
     <link href="vendor/magnific-popup/magnific-popup.css" rel="stylesheet" type="text/css">
 
     <!-- Custom styles for this template -->
     <link href="css/freelancer.css" rel="stylesheet">
+    <!--
     <script src="//code.angularjs.org/snapshot/angular.min.js"></script>
+    -->
+    <script src="vendor/angular/angular.min.js"></script>
     
   </head>
 
@@ -101,12 +106,14 @@
 		  		<h4>Выберите вариант ответа и 
 		  		<br>
 		  		мы пошлем его отправителю</h4>
+		  		<!-- 
 		  		<div class="row justify-content-md-center">
 			  		<div class="text-left col-6 ml-4" ng-class="{'has-error' : error.fieldName=='phone'}">
 	  					<label for="phone">Последние 4 цифры вашего телефона</label>
 			  			<input type="text" name="phone" ng-model="phone" placeholder="1234" maxlength="4" class="form-control">
 			  		</div>
 		  		</div>
+		  		 -->
 		  		<div class="row justify2-content-md-center" ng-repeat="option in message.messageType.answers">
 			  		<div class="text-left ml-4 col-6">
 		  				<input type="radio" name="answer" ng-model="formData.answer" ng-value="option" id="option-{{option.name}}" class="form-check-input">
@@ -210,12 +217,14 @@ app.controller("answerCtrl", function($scope, $http) {
     	if(!$scope.formData.answer) {
     		return 'Не выбран вариант ответа';
     	}
+    	/*
     	if(!$scope.phone) {
-    		return 'Введите последние 4 цифры телефона';
+    		// return 'Введите последние 4 цифры телефона';
     	}
     	if($scope.phone.trim().length != 4) {
-    		return 'Введите 4 цифры телефона';
+    		// return 'Введите 4 цифры телефона';
     	}
+    	*/
     	return null;
     }
     
