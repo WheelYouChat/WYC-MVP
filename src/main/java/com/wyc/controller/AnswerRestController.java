@@ -121,9 +121,25 @@ public class AnswerRestController extends ExceptionHandlerController {
 		
 	}
 	
+	@RequestMapping(path="/makeDialogFaakkeeTurnRight", method=RequestMethod.POST)
+	public Dialog makeFakeDialogTurnRight(@RequestBody Dialog dialog) {
+		answerService.makeFakeDialogTurnRight(dialog);
+		return dialog;
+		
+	}
+	
 	@RequestMapping(path="/dialogs", method=RequestMethod.GET)
 	public List<Dialog> getFakeDialogs(@RequestParam(name="max", defaultValue="0") int max) {
 		List<Dialog> res = answerService.getFakeDialogs();
+		if(max > 0 && res.size() > max) {
+			res = res.subList(0, max);
+		}
+		return res;
+	}
+	
+	@RequestMapping(path="/loadDialogsTurnRight", method=RequestMethod.GET)
+	public List<Dialog> getFakeDialogsTurnRight(@RequestParam(name="max", defaultValue="0") int max) {
+		List<Dialog> res = answerService.getFakeDialogsTurnRight();
 		if(max > 0 && res.size() > max) {
 			res = res.subList(0, max);
 		}

@@ -39,6 +39,12 @@ public class AnswerController {
 		pageVisitService.logPageVisit("dialog-fake", request);
 		return "_dialogFake.html";
 	}
+	
+	@RequestMapping(path="/dialog_ffaakkee2", method=RequestMethod.GET)
+	public String makeFakeDialogTurnRight(HttpServletRequest request) {
+		pageVisitService.logPageVisit("dialog-fake-turn-right", request);
+		return "_dialogFakeTurnRight.html";
+	}
 	/*
 	@RequestMapping(path="/a/{code:[0-9]+}/answer", method=RequestMethod.POST)
 	@ResponseBody

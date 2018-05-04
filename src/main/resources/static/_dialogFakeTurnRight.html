@@ -1,0 +1,271 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+    <title>Создать диалог</title>
+
+    <!-- Bootstrap core CSS -->
+    <!-- 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+ 	-->
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.20.0/select.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.9/angular.js"></script>
+    <!-- 
+    <script src="//code.angularjs.org/snapshot/angular.min.js"></script>
+     -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-sanitize/1.6.9/angular-sanitize.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.20.0/select.min.js"></script>
+    
+    <style>
+    	.has-error {
+    		color:red;
+    	}
+    	
+    	.has-error input {
+    		border-color:red;
+    	}
+    	
+    	.panel{
+    		margin:40px;
+    	}
+    </style>
+    <style>
+        body {
+            padding: 15px;
+        }
+
+        .select2 > .select2-choice.ui-select-match {
+            /* Because of the inclusion of Bootstrap */
+            height: 29px;
+        }
+
+        .selectize-control > .selectize-dropdown {
+            top: 36px;
+        }
+        /* Some additional styling to demonstrate that append-to-body helps achieve the proper z-index layering. */
+        .select-box {
+          background: #fff;
+          position: relative;
+          z-index: 1;
+        }
+        .alert-info.positioned {
+          margin-top: 1em;
+          position: relative;
+          z-index: 10000; /* The select2 dropdown has a z-index of 9999 */
+        }
+    </style>
+  </head>
+
+  <body>
+  	<div class="container"  ng-app="dialogApp" ng-controller="dialogCtrl">
+  		<h1>Создать диалог</h1>
+  		<form>
+  			<div class="panel">
+  				<h6>Место события</h6>
+		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
+	 				<label class="col-sm-2 col-form-label" for="phone">Долгота</label>
+		  			<input type="text" name="longitude" ng-model="longitude" placeholder="30">
+		  		</div>
+		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
+	 				<label class="col-sm-2 col-form-label" for="phone">Широта</label>
+		  			<input type="text" name="latitude" ng-model="latitude" placeholder="60">
+		  		</div>
+		  		<div ng-show="longitude > 0 && latitude > 0">
+			  		<img ng-src="https://static-maps.yandex.ru/1.x/?ll={{longitude}},{{latitude}}&pt={{longitude}},{{latitude}},pmwtl&l=map&z=14&size={{500}},{{300}}"
+			  		width="500" height="300" alt="Место, где все произошло"/>
+			  	</div>
+	  		</div>
+  			<div class="panel">
+  				<h6>Нарушитель : {{cutter.number}} </h6>
+		  		<div class="form-group row" ng-class="{'has-error' : error.fieldName=='phone'}">
+	 				<label class="col-sm-2 col-form-label" for="phone">Номер</label>
+		  			<input type="text" name="cutterNumber" ng-model="cutter.number" placeholder="А000АА177" maxlength="9" >
+		  		</div>
+	  		</div>
+	  		
+	  		<div>
+	  			<button class="btn btn-large btn-success" ng-click="makeDialog()">Отправить</button>
+	  		</div>
+  		
+  		</form>
+	  	<table class="table">
+	  		<thead>
+	  			<tr>
+	  				<th>
+	  					Дата
+	  				</th>
+	  				<th>
+	  					Место
+	  				</th>
+	  				<th>
+	  					Нурушитель
+	  				</th>
+	  			</tr>
+	  		</thead>
+	  		<tbody>
+	  			<tr ng-repeat="d in dialogs">
+	  				<td>
+	  					{{d.creationDate | date : 'dd.MM.yy hh:mm'}}
+	  				</td>
+	  				<td>
+	  					{{d.locationTitle}} ({{d.longitude}}:{{d.latitude}})
+	  				</td>
+	  				<td>
+	  					{{d.cutter.number}} {{d.cutter.brand}} {{d.cutter.color}}
+	  				</td>
+	  				<td>
+	  					{{d.cutted.number}}
+	  				</td>
+	  			</tr>
+	  		</tbody>
+	  	</table>
+  	</div>
+  </body>
+</html>
+
+<script type="text/javascript">
+var app = angular.module("dialogApp", ['ngSanitize', 'ui.select']); 
+app.controller("dialogCtrl", function($scope, $http) {
+	var MALE = 0, FEMALE = 1;
+	$scope.colors = [ 
+	                 ["белый", "белая"],
+	                 ["черный", "черная"],
+	                 ["серебристый", "серебристая"],
+	                 ["красный", "красная"],
+	                 ["синий", "синяя"],
+	                 ["бежевый", "бежевая"],
+	                 ["серый", "серая"],
+	                 ["голубой", "голубая"],
+	                 ["зеленый", "зеленая"],
+	                 ["желтый", "желтая"],
+	                 ["коричневый", "коричневая"],
+	                 ["оранжевый", "оранжевая"],
+	                 ["фиолетовый", "фиолетовая"],
+	                 ];
+	$scope.brandsWithSex = [
+	                 ["Audi", FEMALE],  
+	                 ["Mercedez"],
+	                 ["Volkswagen"],
+	                 ["Opel"],
+	                 ["Porsche"],
+	                 ["Skoda", FEMALE],
+	                 ["BMV"],
+	                 ["Smart"],
+
+	                 ["Citroen"],
+	                 ["Peugeout"],
+	                 ["Renault"],
+
+	                 ["Ford"],
+	                 ["Chevrolet"],
+	                 ["Jeep"],
+	                 ["Chrysler"],
+	                 ["Cadillac‎"],
+	                 ["Hummer"],
+	                 ["Dodge"],
+	                 ["Land Rover"],
+	                 ["Range Rover"],
+
+	                 ["Volvo"],
+	                 ["SAAB"],
+	                 ["Mini Cooper"],
+
+	                 ["KIA", FEMALE],
+	                 ["Hyundai"],
+	                 ["Daewoo"],
+
+	                 ["Lada", FEMALE],
+	                 ["Жигули"],
+	                 ["Москвич"],
+	                 ["Волга", FEMALE],
+	                 ["УАЗ Patriot"],
+
+	                 ["Alfa Romeo", FEMALE],
+	                 ["Fiat"],
+
+	                 ["BYD"],
+	                 ["Cherry", FEMALE],
+	                 ["Geely"],
+	                 ["Great Wall"],
+	                 ["Lifan"],
+
+	                 ["Maybach"],
+	                 ["Bentley"],
+	                 ["Ferrari"],
+	                 ["Maserati"],
+	                 ["Jaguar"],
+	                 ["Lamborghini‎", FEMALE],
+
+	                 ["Toyota", FEMALE],
+	                 ["Lexus"],
+	                 ["Subaru", FEMALE],
+	                 ["Nissan"],
+	                 ["Mitsubishi"],
+	                 ["Infinity"],
+	                 ["Mazda", FEMALE],
+	                 ["Honda", FEMALE],
+	                 ["Suzuki"],
+	                 ["Seat"],
+	                 
+	                 ];
+	
+	$scope.brands = getOnlyBrands($scope.brandsWithSex);
+	$scope.cutter = {};
+	$scope.cutted = {};
+	$scope.getColorsForBrands = getColorsForBrands;
+    $scope.makeDialog = function() {
+    	$http.post('/makeDialogFaakkeeTurnRight', 
+    			{
+    				cutter : $scope.cutter,
+    				cutted : $scope.cutted,
+    				longitude : $scope.longitude,
+    				latitude  : $scope.latitude,
+    			})
+    	.then(function(data){
+    		console.log("Ok");
+    		loadDialogsTurnRight();
+    		$scope.cutter = {};
+    		$scope.cutted = {};
+    	}, function(error) {
+    		console.log(error);
+    	});
+    }
+    
+    function loadDialogsTurnRight() {
+	    $http.get("/loadDialogsTurnRight?max=30").then(function(data){
+	    	console.log(data);
+	    	$scope.dialogs = data.data;
+	    	if($scope.dialogs.length > 0) {
+	    		$scope.longitude = $scope.dialogs[0].longitude; 
+	    		$scope.latitude = $scope.dialogs[0].latitude; 
+	    	}
+	    });
+    }
+    
+    loadDialogsTurnRight();
+});
+
+function getColorsForBrands(selectedBrand, brandsWithSex, colors) {
+	var brandWithSex = brandsWithSex.filter((b) => b[0] == selectedBrand);
+	if(brandWithSex.length > 0) {
+		var sexIdx = 0;
+		if(brandWithSex[0].length >= 2) {
+			sexIdx = brandWithSex[0][1];
+		}
+		var res = colors.map((b) => b[sexIdx]);
+		return res;	
+	}
+	return [];
+	
+}
+
+function getOnlyBrands(brandsWithSex) {
+	var res = brandsWithSex.map((b) => b[0]);
+	return res;	
+}
+</script>

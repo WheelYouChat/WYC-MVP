@@ -230,45 +230,50 @@ public class WYCBotScheduledTask {
 				}
 				log.info("  message.id = " + message.getId() + " persons = " + persons);
 				for(Person person : persons) {
-					if(person.getViberId() != null && !personService.hasActiveContext(person)) {
-						ViberMessage sendMessage = new ViberMessage();
-						String text = createMessageText(message);
-						sendMessage.setText(text);
-						
-						ViberKeyBoard replyMarkup = createReplyButtons(message.getMessageType(), message.getId());
-						sendMessage.setKeyboard(replyMarkup);
-	
-						DriveMessageDelivery messageDelivery = DriveMessageDelivery
-								.builder()
-								.deliveredDate(new Date())
-								.deliveryType(DeliveryType.VIBER)
-								.to(person)
-								.driveMessage(message)
-								.sentDate(new Date())
-								.build();
-
-						try {
-							ViberSentMessage sentMessage = viberApi.sendMessage(person.getViberId(), sendMessage, message.getFrom().getUserDesc());
-							messageDelivery.setSentMessageId(sentMessage.getMessage_token());
-							messageDelivery.setDeliveredDate(new Date());
-							message.setDelivered(true);
+					try {
+						if(person.getViberId() != null && !personService.hasActiveContext(person)) {
+							ViberMessage sendMessage = new ViberMessage();
+							String text = createMessageText(message);
+							sendMessage.setText(text);
 							
-							driveMessageRepository.save(message);
-							// TODO redesing it - Нужно проставлять флаг delivered при получении асинхронного ответа
-						} catch (IOException e) {
-							log.error("Error sending", e);
+							ViberKeyBoard replyMarkup = createReplyButtons(message.getMessageType(), message.getId());
+							sendMessage.setKeyboard(replyMarkup);
+		
+							DriveMessageDelivery messageDelivery = DriveMessageDelivery
+									.builder()
+									.deliveredDate(new Date())
+									.deliveryType(DeliveryType.VIBER)
+									.to(person)
+									.driveMessage(message)
+									.sentDate(new Date())
+									.build();
+	
+							try {
+								ViberSentMessage sentMessage = viberApi.sendMessage(person.getViberId(), sendMessage, message.getFrom().getUserDesc());
+								messageDelivery.setSentMessageId(sentMessage.getMessage_token());
+								messageDelivery.setDeliveredDate(new Date());
+								message.setDelivered(true);
+								
+								driveMessageRepository.save(message);
+								// TODO redesing it - Нужно проставлять флаг delivered при получении асинхронного ответа
+							} catch (IOException e) {
+								log.error("Error sending", e);
+							}
+							
+							/*
+							try {
+								messageDelivery.setSentMessageId(sentMessage.getMessageId());
+								driveMessageRepository.save(message);
+							} catch (TelegramApiException e) {
+								log.error("Error delivering message", e);
+								messageDelivery.setDeliveryException(e.toString());
+							}
+							//*/
+							driveMessageDeliveryRepository.save(messageDelivery);
 						}
-						
-						/*
-						try {
-							messageDelivery.setSentMessageId(sentMessage.getMessageId());
-							driveMessageRepository.save(message);
-						} catch (TelegramApiException e) {
-							log.error("Error delivering message", e);
-							messageDelivery.setDeliveryException(e.toString());
-						}
-						//*/
-						driveMessageDeliveryRepository.save(messageDelivery);
+					}catch (Exception e) {
+						log.error("Cannot send message", e);
+						// TODO: handle exception
 					}
 				}
 			}

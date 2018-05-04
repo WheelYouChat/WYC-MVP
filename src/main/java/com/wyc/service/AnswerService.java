@@ -114,6 +114,33 @@ public class AnswerService {
 		return driveMessageRepository.findByRepliedToId(messageId);
 	}
 	
+	public List<Dialog> getFakeDialogsTurnRight() {
+		List<Dialog> res = new ArrayList<>();
+		
+		List<DriveMessage> messages = new ArrayList(driveMessageRepository.findByMessageType(DriveMessageType.TURN_RIGHT_WRONG_LANE));
+		Collections.sort(messages, new Comparator<DriveMessage>() {
+
+			@Override
+			public int compare(DriveMessage m1, DriveMessage m2) {
+				return -m1.getCreationDate().compareTo(m2.getCreationDate());
+			}
+		});
+		
+		for(DriveMessage m : messages) {
+			Dialog dialog = new Dialog();
+			dialog.setLocationTitle(m.getLocationTitle());
+			dialog.setLongitude(m.getLongitude());
+			dialog.setLatitude(m.getLatitude());
+			dialog.setCreationDate(m.getCreationDate());
+			
+			DialogPerson cutter =  new DialogPerson();
+			cutter.setNumber(m.getCarNumberTo());
+			dialog.setCutter(cutter);
+			res.add(dialog );
+		}
+
+		return res;
+	}
 	public List<Dialog> getFakeDialogs() {
 		List<Dialog> res = new ArrayList<>();
 		
@@ -156,6 +183,24 @@ public class AnswerService {
 		return res;
 	}
 
+	public void makeFakeDialogTurnRight(Dialog dialog) {
+		Person p = personRepository.findOne(174L);
+		if(p == null) {
+			p = personRepository.findOne(1481L);
+		}
+		DriveMessage msg = DriveMessage.builder()
+				.carNumberTo(dialog.getCutter().getNumber())
+				.creationDate(new Date())
+				.from(p)
+				.messageType(DriveMessageType.TURN_RIGHT_WRONG_LANE)
+				.message(DriveMessageType.TURN_RIGHT_WRONG_LANE.getTitle())
+				.smsMessage(DriveMessageType.TURN_RIGHT_WRONG_LANE.getSms())
+				.latitude(dialog.getLatitude())
+				.longitude(dialog.getLongitude())
+				.build();
+		driveMessageRepository.save(msg);
+	}
+	
 	public void makeFakeDialog(Dialog dialog) {
 		Person cutter = createFakePerson(dialog.getCutter());
 		Person cutted = createFakePerson(dialog.getCutted());
