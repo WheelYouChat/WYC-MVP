@@ -36,7 +36,7 @@ public class DriveMessage {
 		//                   123456789012345678901234567890
 		
 		// Ответы на жалобы
-		SORRY              ("Извините", "Извините", GREEN, new Person.Role[0]),
+		SORRY              ("Извините, если создал вам неудобства", "Извините, если создал вам неудобства", GREEN, new Person.Role[0]),
 		SORRY_USUALLY_DO   ("Извините, обычно я так и делаю", "Извините, обычно я так и делаю", GREEN, new Person.Role[0]),
 		SORRY_USUALLY_DONT ("Извините, обычно я так не делаю", "Извините, обычно я так не делаю", GREEN, new Person.Role[0]),
 		SORRY_HURRY        ("Извините, очень спешил", "Извините, очень спешил", GREEN, new Person.Role[0]),
