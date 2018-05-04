@@ -72,7 +72,7 @@ public class SMSMessageGenerator {
 		}
 		
 		for(String s : lst) {
-			if(s.length() <= 70) {
+			if(s.length() <= 130) {
 				return s;
 			}
 		}

@@ -36,6 +36,7 @@ public class DriveMessage {
 		//                   123456789012345678901234567890
 		
 		// Ответы на жалобы
+		I_DIDNT_BREAK_RULES("Вы ошиблись, я не нарушал ПДД", "Вы ошиблись, я не нарушал ПДД", GREEN, new Person.Role[0]),
 		SORRY              ("Извините, если создал вам неудобства", "Извините, если создал вам неудобства", GREEN, new Person.Role[0]),
 		SORRY_USUALLY_DO   ("Извините, обычно я так и делаю", "Извините, обычно я так и делаю", GREEN, new Person.Role[0]),
 		SORRY_USUALLY_DONT ("Извините, обычно я так не делаю", "Извините, обычно я так не делаю", GREEN, new Person.Role[0]),
@@ -57,12 +58,12 @@ public class DriveMessage {
 		GOOD_MUSIC           ("Класс.песня из вашего авто","Мне понравилась музыка, которая звучала из вашего автомобиля", GREEN, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, GLAD_MUSIC_IS_OK, I_WAS_NOT_THERE),
 
 		CUT_OFF              ("Вы меня подрезали",         "Вы меня подрезали", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
-		TURN_RIGHT_WRONG_LANE("Вы повернули вторым рядом", "Вы нарушили ПДД, повернув направо из неправильного ряда", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
-		TURN_LEFT_WRONG_LANE ("Вы повернули вторым рядом", "Вы нарушили ПДД, повернув налево из неправильного ряда", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
-		DANGEROUS_DRIVING    ("Вы опасно ехали",           "Вы создавали опасные ситуации на дороге для других водителей", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
-		BROKE_RULES          ("Вы нарушили ПДД",           "Вы нарушили правила дорожного движения", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT,SORRY_HURRY, I_WAS_NOT_THERE),
+		TURN_RIGHT_WRONG_LANE("Вы повернули вторым рядом", "Вы нарушили ПДД, повернув направо из неправильного ряда", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, I_DIDNT_BREAK_RULES, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
+		TURN_LEFT_WRONG_LANE ("Вы повернули вторым рядом", "Вы нарушили ПДД, повернув налево из неправильного ряда", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, I_DIDNT_BREAK_RULES, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
+		DANGEROUS_DRIVING    ("Вы опасно ехали",           "Вы создавали опасные ситуации на дороге для других водителей", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, I_DIDNT_BREAK_RULES, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
+		BROKE_RULES          ("Вы нарушили ПДД",           "Вы нарушили правила дорожного движения", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, I_DIDNT_BREAK_RULES, SORRY, SORRY_USUALLY_DONT,SORRY_HURRY, I_WAS_NOT_THERE),
 		DID_NOT_GIVE_WAY     ("Вы не уступили дорогу",     "Вы мне не уступили дорогу", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_HURRY, I_DONT_HAVE_TO_GIVE_WAY, I_WAS_NOT_THERE),
-		WRONG_PARKING        ("Вы плохо припаркованы",     "Ваша машина неправильно припаркована", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, CAR_IS_NOT_THERE),
+		WRONG_PARKING        ("Вы плохо припаркованы",     "Ваша машина неправильно припаркована", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, I_DIDNT_BREAK_RULES, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, CAR_IS_NOT_THERE),
 		BLOCK_PARKING        ("Вы меня блокировали",       "Ваша машина заблокировала мне выезд", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, CAR_IS_NOT_THERE),
 		LOUD_SIGNAL          ("Вы громко сигналили",       "Вы очень громко сигналили, без явной необходимости", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
 		USE_TURN_LIGHT       ("Включайте поворотник",      "Вы не использовали указатель поворота при перестроении или повороте, прошу используйте его", RED, new Person.Role[]{Role.DRIVER, Role.ADMIN, Role.PEDESTRIAN}, SORRY, SORRY_USUALLY_DONT, I_WAS_NOT_THERE),
@@ -74,8 +75,8 @@ public class DriveMessage {
 		
 		
 		// Жалобы от пешеходов
-		PED_DID_NOT_GIVE_WAY("Вы не пропустили пешехода",  "Вы не пропустили пешехода на пешеходном переходе", RED, new Person.Role[]{Role.PEDESTRIAN, Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
-		PED_BLOCK_CROSSWALK ("Блокировали переход",        "Вы блокировали пешеходный переход или проход пешеходов", RED, new Person.Role[]{Role.PEDESTRIAN, Role.DRIVER, Role.ADMIN}, SORRY, SORRY_USUALLY_DONT, SORRY_TRAFFIC, I_WAS_NOT_THERE),
+		PED_DID_NOT_GIVE_WAY("Вы не пропустили пешехода",  "Вы не пропустили пешехода на пешеходном переходе", RED, new Person.Role[]{Role.PEDESTRIAN, Role.DRIVER, Role.ADMIN}, I_DIDNT_BREAK_RULES, SORRY, SORRY_USUALLY_DONT, SORRY_HURRY, I_WAS_NOT_THERE),
+		PED_BLOCK_CROSSWALK ("Блокировали переход",        "Вы блокировали пешеходный переход или проход пешеходов", RED, new Person.Role[]{Role.PEDESTRIAN, Role.DRIVER, Role.ADMIN}, I_DIDNT_BREAK_RULES, SORRY, SORRY_USUALLY_DONT, SORRY_TRAFFIC, I_WAS_NOT_THERE),
 		
 		
 		;

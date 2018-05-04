@@ -74,16 +74,20 @@ public class AnswerRestController extends ExceptionHandlerController {
 	
 	@RequestMapping(path="/api/answer", method=RequestMethod.POST)
 	public DriveMessage answer(@RequestBody AnswerRequest request) {
+		/*
 		if(request.getPhone().trim().length() != 4) {
-			throw new UIException("Телефонный номер должен содержать 4 цифры", "phone");
+			// throw new UIException("Телефонный номер должен содержать 4 цифры", "phone");
 		}
+		*/
 		
 		DriveMessageDelivery delivery = answerService.getDriveMessageDelivery(request.getCode()).orElseThrow(() -> new ResourceNotFoundException("Cannot find delivery by code '" + request.getCode() + "'"));;
 		String phoneNumber = delivery.getPhoneNumber();
 		// Проверяем телефонный номер
+		/*
 		if(phoneNumber == null || !phoneNumber.endsWith(request.getPhone().trim())) {
-			throw new UIException("Неправильный номер", "phone");
+			// throw new UIException("Неправильный номер", "phone");
 		}
+		*/
 		
 		DriveMessage message = delivery.getDriveMessage();
 		
