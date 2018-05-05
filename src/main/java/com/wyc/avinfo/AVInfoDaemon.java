@@ -60,22 +60,27 @@ public class AVInfoDaemon {
 				
 				// Берем недоставленные сообщения
 				for(DriveMessage message : messages) {
-					String carNumber = message.getCarNumberTo();
-					carNumber = carNumber.toUpperCase();
-					if(acceptedToFind(carNumber)) {
-						
-						// Сначала проверяем, может такой человек уже есть с Viber account-ом
-						List<Person> person = personRepository.findByCarNumber(carNumber);
-						boolean personFound = person.stream().anyMatch(p -> {return StringUtils.isBlank(p.getViberId());});
-						
-						if(!personFound) {
-							// Не нашли никого с заполненным ViberId
-							log.debug("  Trying to get phone for " + carNumber);
-							AVICar car = avinfoService.getCar(carNumber);
-							log.debug("  found info for car number " + carNumber + " car = " + car);
+					try {
+						String carNumber = message.getCarNumberTo();
+						carNumber = carNumber.toUpperCase();
+						if(acceptedToFind(carNumber)) {
+							
+							// Сначала проверяем, может такой человек уже есть с Viber account-ом
+							List<Person> person = personRepository.findByCarNumber(carNumber);
+							boolean personFound = person.stream().anyMatch(p -> {return StringUtils.isBlank(p.getViberId());});
+							
+							if(!personFound) {
+								// Не нашли никого с заполненным ViberId
+								log.debug("  Trying to get phone for " + carNumber);
+								AVICar car = avinfoService.getCar(carNumber);
+								log.debug("  found info for car number " + carNumber + " car = " + car);
+							}
 						}
+					}catch(Exception e) {
+						log.error("Error getting number for message " + message, e);
 					}
 				}
+					
 			} finally {
 				processing = false;
 			}
