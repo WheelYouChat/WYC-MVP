@@ -172,6 +172,7 @@ public class ViberBot {
 					.lastName(sender.getName())
 					.avatar(sender.getAvatar())
 					.role(Person.Role.PEDESTRIAN)
+					.registrationDate(new Date())
 					.build();
 			personRepository.save(person);
 		}

@@ -125,14 +125,14 @@ public class MonitoringController {
 		private int activeSubscribers;
 		
 		public String getDescription() {
-			return "Найдено - " + 
-					(int)(100. * phoneNumbersFound / initialMessagesCreated)
-				+ "% - послано " + (int)(100. * smsMessagesSent / initialMessagesCreated)
-				+ "% - доставлено " + (int)(100. * smsMessagesDelivered / initialMessagesCreated)
-				+ "% - открыто " + (int)(100. * answerPageOpened / initialMessagesCreated)
-				+ "% - ответов " + (int)(100. * answerSentFromAnswerPage / initialMessagesCreated)
-				+ "% - подписалось " + (int)(100. * subscribed / initialMessagesCreated)
-				+ "% - вовлеклось " + (int)(100. * activeSubscribers / initialMessagesCreated) + "%"
+			return "Послано - " + initialMessagesCreated / smsMessagesSent
+				+ "% - найдено - " + (int)(100. * phoneNumbersFound / smsMessagesSent)
+				+ "% - послано " + (int)(100. * smsMessagesSent / smsMessagesSent)
+				+ "% - доставлено " + (int)(100. * smsMessagesDelivered / smsMessagesSent)
+				+ "% - открыто " + (int)(100. * answerPageOpened / smsMessagesSent)
+				+ "% - ответов " + (int)(100. * answerSentFromAnswerPage / smsMessagesSent)
+				+ "% - подписалось " + (int)(100. * subscribed / smsMessagesSent)
+				+ "% - вовлеклось " + (int)(100. * activeSubscribers / smsMessagesSent) + "%"
 				;
 		}
 	}
@@ -174,7 +174,7 @@ public class MonitoringController {
 				+ "SELECT count(*) FROM ("
 				+ "  SELECT DISTINCT code "
 				+ "  FROM drive_message_delivery dmd JOIN page_visit pv ON concat('/', dmd.code) = pv.url "
-				+ "    JOIN drive_message dm ON dm.replied_to_id = dmd.id"
+				+ "    JOIN drive_message dm ON dm.replied_to_id = dmd.drive_message_id"
 				+ "  WHERE delivery_type = 'SMS' AND delivery_status = 'DELIVERED' AND sent_date >= ?"
 				+ ") AS t", new Object[]{firstDate}, Integer.class));
 		
