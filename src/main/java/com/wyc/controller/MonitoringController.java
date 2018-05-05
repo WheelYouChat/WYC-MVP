@@ -100,6 +100,9 @@ public class MonitoringController {
 	@AllArgsConstructor
 	@Builder
 	public static class Funnel {
+		// С какой даты считается воронка
+		private Date date;
+		
 		// Сколько всего было создано первых сообщений
 		private int initialMessagesCreated;
 
@@ -125,15 +128,15 @@ public class MonitoringController {
 		private int activeSubscribers;
 		
 		public String getDescription() {
-			return "Послано - " + initialMessagesCreated / smsMessagesSent
-				+ "% - найдено - " + (int)(100. * phoneNumbersFound / smsMessagesSent)
-				+ "% - послано " + (int)(100. * smsMessagesSent / smsMessagesSent)
-				+ "% - доставлено " + (int)(100. * smsMessagesDelivered / smsMessagesSent)
-				+ "% - открыто " + (int)(100. * answerPageOpened / smsMessagesSent)
-				+ "% - ответов " + (int)(100. * answerSentFromAnswerPage / smsMessagesSent)
-				+ "% - подписалось " + (int)(100. * subscribed / smsMessagesSent)
-				+ "% - вовлеклось " + (int)(100. * activeSubscribers / smsMessagesSent) + "%"
-				;
+			return "Послано - " +  (int)(100. * initialMessagesCreated / smsMessagesDelivered)
+				+ "% - найдено - " + (int)(100. * phoneNumbersFound / smsMessagesDelivered)
+				+ "% - послано " + (int)(100. * smsMessagesSent / smsMessagesDelivered)
+				+ "% - доставлено " + (int)(100. * smsMessagesDelivered / smsMessagesDelivered)
+				+ "% - открыто " + (int)(100. * answerPageOpened / smsMessagesDelivered)
+				+ "% - ответов " + (int)(100. * answerSentFromAnswerPage / smsMessagesDelivered)
+				+ "% - подписалось " + (int)(100. * subscribed / smsMessagesDelivered)
+				+ "% - вовлеклось " + (int)(100. * activeSubscribers / smsMessagesDelivered) + "% d = " + date;
+				
 		}
 	}
 	
@@ -148,6 +151,7 @@ public class MonitoringController {
 		}
 		log.info("getFunnel firstDate = " + firstDate);
 		Funnel funnel = new Funnel();
+		funnel.setDate(firstDate);
 		funnel.setInitialMessagesCreated(jdbcTemplate.queryForObject(""
 				+ "SELECT count(*) "
 				+ "FROM ( "
